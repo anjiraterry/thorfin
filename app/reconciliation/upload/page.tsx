@@ -150,11 +150,11 @@ export default function UploadPage() {
 
       const data: UploadResponse = await response.json();
       
-      setCurrentJobId(data.jobId);
-      setPayoutColumns(data.payoutColumns || []);
-      setLedgerColumns(data.ledgerColumns || []);
-      setPayoutPreview(data.payoutPreview || []);
-      setLedgerPreview(data.ledgerPreview || []);
+      setCurrentJobId(data.job_id);
+      setPayoutColumns(data.payout_columns || []);
+      setLedgerColumns(data.ledger_columns || []);
+      setPayoutPreview(data.payout_preview || []);
+      setLedgerPreview(data.ledger_preview || []);
 
       setUploadProgress(100);
 
@@ -163,7 +163,7 @@ export default function UploadPage() {
         description: "Now configure your column mappings.",
       });
 
-      router.push("/mapping");
+      router.push("/reconciliation/mapping");
     } catch (error) {
       toast({
         title: "Upload failed",

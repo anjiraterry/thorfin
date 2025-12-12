@@ -94,26 +94,32 @@ export default function ResultsPage() {
   const router = useRouter();
   const { toast } = useToast();
   const {
-    currentJobId,
-    selectedMatchId,
+    current_job_id,
+    selected_match_id,
     setSelectedMatchId,
-    activeTab,
+    active_tab,
     setActiveTab,
   } = useAppStore();
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: results, isLoading, error } = useQuery<JobResultsResponse>({
-    queryKey: ["/api/job", currentJobId, "results"],
-    enabled: !!currentJobId,
-  });
-
+const { data: results, isLoading, error } = useQuery<JobResultsResponse>({
+  queryKey: ["/api/job", current_job_id, "results"],
+  enabled: !!current_job_id,
+  queryFn: async () => {
+    const response = await fetch(`/api/job/${current_job_id}/results`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch results');
+    }
+    return response.json();
+  },
+});
   const acceptMutation = useMutation({
     mutationFn: async (matchId: string) => {
       return apiRequest("POST", `/api/match/${matchId}/accept`, {});
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/job", currentJobId, "results"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/job", current_job_id, "results"] });
       toast({ title: "Match accepted" });
     },
   });
@@ -123,16 +129,16 @@ export default function ResultsPage() {
       return apiRequest("POST", `/api/match/${matchId}/reject`, {});
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/job", currentJobId, "results"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/job", current_job_id, "results"] });
       toast({ title: "Match rejected" });
     },
   });
 
   useEffect(() => {
-    if (!currentJobId) {
+    if (!current_job_id) {
       router.push("/");
     }
-  }, [currentJobId, router]);
+  }, [current_job_id, router]);
 
   if (isLoading) {
     return (
@@ -157,29 +163,29 @@ export default function ResultsPage() {
     );
   }
 
-  const selectedMatch = results.matches.find((m) => m.id === selectedMatchId);
+  const selectedMatch = results.matches.find((m) => m.id === selected_match_id);
 
   const filteredMatches = results.matches.filter((match) => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     return (
-      match.payout?.txId?.toLowerCase().includes(query) ||
-      match.ledger?.txId?.toLowerCase().includes(query) ||
+      match.payout?.tx_id?.toLowerCase().includes(query) ||
+      match.ledger?.tx_id?.toLowerCase().includes(query) ||
       match.payout?.reference?.toLowerCase().includes(query) ||
       match.ledger?.reference?.toLowerCase().includes(query)
     );
   });
 
   const handleDownloadPDF = () => {
-    window.open(`/api/download/${currentJobId}/pdf`, "_blank");
+    window.open(`/api/download/${current_job_id}/pdf`, "_blank");
   };
 
   const handleDownloadJSON = () => {
-    window.open(`/api/download/${currentJobId}/json`, "_blank");
+    window.open(`/api/download/${current_job_id}/json`, "_blank");
   };
 
   const handleDownloadCSV = () => {
-    window.open(`/api/download/${currentJobId}/csv`, "_blank");
+    window.open(`/api/download/${current_job_id}/csv`, "_blank");
   };
 
   return (
@@ -218,28 +224,28 @@ export default function ResultsPage() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 px-6 py-4 border-t bg-muted/30">
           <KPICard
             label="Processed Rows"
-            value={(results.stats.totalPayouts + results.stats.totalLedger).toLocaleString()}
-            subtext={`${results.stats.totalPayouts} payouts, ${results.stats.totalLedger} ledger`}
+            value={(results.stats.total_payouts + results.stats.total_ledger).toLocaleString()}
+            subtext={`${results.stats.total_payouts} payouts, ${results.stats.total_ledger} ledger`}
           />
           <KPICard
             label="Match Rate"
-            value={`${(results.stats.matchRate * 100).toFixed(1)}%`}
-            variant={results.stats.matchRate >= 0.7 ? "success" : "warning"}
+            value={`${(results.stats.match_rate * 100).toFixed(1)}%`}
+            variant={results.stats.match_rate >= 0.7 ? "success" : "warning"}
           />
           <KPICard
             label="Matched"
-            value={results.stats.matchedCount.toLocaleString()}
+            value={results.stats.matched_count.toLocaleString()}
             variant="success"
           />
           <KPICard
             label="Unmatched"
-            value={results.stats.unmatchedCount.toLocaleString()}
-            variant={results.stats.unmatchedCount > 0 ? "warning" : "default"}
+            value={results.stats.unmatched_count.toLocaleString()}
+            variant={results.stats.unmatched_count > 0 ? "warning" : "default"}
           />
           <KPICard
             label="Unmatched Amount"
-            value={formatCents(results.stats.totalUnmatchedAmount)}
-            variant={results.stats.totalUnmatchedAmount > 0 ? "destructive" : "default"}
+            value={formatCents(results.stats.total_unmatched_amount)}
+            variant={results.stats.total_unmatched_amount > 0 ? "destructive" : "default"}
           />
         </div>
       </header>
@@ -247,7 +253,7 @@ export default function ResultsPage() {
       <div className="flex-1 flex overflow-hidden">
         <div className="flex-1 flex flex-col overflow-hidden border-r">
           <div className="p-4 border-b">
-            <Tabs value={activeTab} onValueChange={(v: string) => setActiveTab(v as typeof activeTab)}>
+            <Tabs value={active_tab} onValueChange={(v: string) => setActiveTab(v as typeof active_tab)}>
               <div className="flex items-center justify-between gap-4">
                 <TabsList>
                   <TabsTrigger value="matches" data-testid="tab-matches">
@@ -275,7 +281,7 @@ export default function ResultsPage() {
           </div>
 
           <ScrollArea className="flex-1">
-            {activeTab === "matches" && (
+            {active_tab === "matches" && (
               <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
@@ -294,22 +300,22 @@ export default function ResultsPage() {
                     <TableRow
                       key={match.id}
                       className={`cursor-pointer hover-elevate ${
-                        selectedMatchId === match.id ? "bg-accent" : ""
+                        selected_match_id === match.id ? "bg-accent" : ""
                       }`}
                       onClick={() => setSelectedMatchId(match.id)}
                       data-testid={`row-match-${match.id}`}
                     >
                       <TableCell>
-                        <MatchTypeBadge type={match.matchType || "unknown"} />
+                        <MatchTypeBadge type={match.match_type || "unknown"} />
                       </TableCell>
                       <TableCell className="font-mono text-xs">
-                        {match.payout?.txId || "-"}
+                        {match.payout?.tx_id || "-"}
                       </TableCell>
                       <TableCell className="font-mono text-xs">
-                        {match.ledger?.txId || "-"}
+                        {match.ledger?.tx_id || "-"}
                       </TableCell>
                       <TableCell className="text-right font-mono text-sm">
-                        {formatCents(match.payout?.amountCents || 0)}
+                        {formatCents(match.payout?.amount_cents || 0)}
                       </TableCell>
                       <TableCell className="text-center">
                         <span className="font-mono text-sm">
@@ -317,7 +323,7 @@ export default function ResultsPage() {
                         </span>
                       </TableCell>
                       <TableCell className="text-center">
-                        <ConfidenceBadge level={match.confidenceLevel || "medium"} />
+                        <ConfidenceBadge level={match.confidence_level || "medium"} />
                       </TableCell>
                       <TableCell className="text-center">
                         {match.accepted === 1 ? (
@@ -343,10 +349,10 @@ export default function ResultsPage() {
               </Table>
             )}
 
-            {activeTab === "transactions" && (
+            {active_tab === "transactions" && (
               <div className="p-4">
                 <div className="mb-6">
-                  <h3 className="font-medium mb-3">Unmatched Payouts ({results.unmatchedPayouts.length})</h3>
+                  <h3 className="font-medium mb-3">Unmatched Payouts ({results.unmatched_payouts.length})</h3>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -358,13 +364,13 @@ export default function ResultsPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {results.unmatchedPayouts.slice(0, 50).map((tx) => (
+                      {results.unmatched_payouts.slice(0, 50).map((tx: TransactionRecord) => (
                         <TableRow key={tx.id} data-testid={`row-unmatched-payout-${tx.id}`}>
-                          <TableCell className="font-mono text-xs">{tx.txId || "-"}</TableCell>
+                          <TableCell className="font-mono text-xs">{tx.tx_id || "-"}</TableCell>
                           <TableCell className="text-right font-mono">
-                            {formatCents(tx.amountCents)}
+                            {formatCents(tx.amount_cents)}
                           </TableCell>
-                          <TableCell>{tx.merchantId || "-"}</TableCell>
+                          <TableCell>{tx.merchant_id || "-"}</TableCell>
                           <TableCell className="text-xs text-muted-foreground truncate max-w-[200px]">
                             {tx.reference || "-"}
                           </TableCell>
@@ -376,7 +382,7 @@ export default function ResultsPage() {
                 </div>
 
                 <div>
-                  <h3 className="font-medium mb-3">Unmatched Ledger ({results.unmatchedLedger.length})</h3>
+                  <h3 className="font-medium mb-3">Unmatched Ledger ({results.unmatched_ledger.length})</h3>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -388,13 +394,13 @@ export default function ResultsPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {results.unmatchedLedger.slice(0, 50).map((tx) => (
+                      {results.unmatched_ledger.slice(0, 50).map((tx: TransactionRecord) => (
                         <TableRow key={tx.id} data-testid={`row-unmatched-ledger-${tx.id}`}>
-                          <TableCell className="font-mono text-xs">{tx.txId || "-"}</TableCell>
+                          <TableCell className="font-mono text-xs">{tx.tx_id || "-"}</TableCell>
                           <TableCell className="text-right font-mono">
-                            {formatCents(tx.amountCents)}
+                            {formatCents(tx.amount_cents)}
                           </TableCell>
-                          <TableCell>{tx.merchantId || "-"}</TableCell>
+                          <TableCell>{tx.merchant_id || "-"}</TableCell>
                           <TableCell className="text-xs text-muted-foreground truncate max-w-[200px]">
                             {tx.reference || "-"}
                           </TableCell>
@@ -407,18 +413,18 @@ export default function ResultsPage() {
               </div>
             )}
 
-            {activeTab === "clusters" && (
-              <ClusterView clusters={results.clusters} jobId={currentJobId!} />
+            {active_tab === "clusters" && (
+              <ClusterView clusters={results.clusters} jobId={current_job_id!} />
             )}
           </ScrollArea>
         </div>
 
-        {activeTab === "matches" && (
+        {active_tab === "matches" && (
           <div className="w-[400px] shrink-0 bg-muted/30">
             <MatchInspector
               match={selectedMatch}
-              onAccept={() => selectedMatchId && acceptMutation.mutate(selectedMatchId)}
-              onReject={() => selectedMatchId && rejectMutation.mutate(selectedMatchId)}
+              onAccept={() => selected_match_id && acceptMutation.mutate(selected_match_id)}
+              onReject={() => selected_match_id && rejectMutation.mutate(selected_match_id)}
               isAccepting={acceptMutation.isPending}
               isRejecting={rejectMutation.isPending}
             />

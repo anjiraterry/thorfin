@@ -14,7 +14,7 @@ import { defaultSettings } from "@/@types";
 export default function SettingsPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { settings, setSettings, currentJobId } = useAppStore();
+  const { settings, setSettings, current_job_id } = useAppStore();
 
   const handleReset = () => {
     setSettings(defaultSettings);
@@ -29,7 +29,7 @@ export default function SettingsPage() {
       title: "Settings saved",
       description: "Your settings have been saved successfully.",
     });
-    if (currentJobId) {
+    if (current_job_id) {
       router.push("/results");
     } else {
       router.push("/");
@@ -43,7 +43,7 @@ export default function SettingsPage() {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => (currentJobId ? router.push("/results") : router.push("/"))}
+            onClick={() => (current_job_id ? router.push("/results") : router.push("/"))}
             data-testid="button-back"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -69,7 +69,7 @@ export default function SettingsPage() {
                 <div className="flex items-center justify-between">
                   <Label htmlFor="amount-tolerance">Amount Tolerance</Label>
                   <span className="font-mono text-sm">
-                    {settings.amountToleranceCents} cents
+                    {settings.amount_tolerance_cents} cents
                   </span>
                 </div>
                 <Slider
@@ -77,9 +77,9 @@ export default function SettingsPage() {
                   min={0}
                   max={1000}
                   step={10}
-                  value={[settings.amountToleranceCents]}
+                  value={[settings.amount_tolerance_cents]}
                   onValueChange={([value]: [number]) =>
-                    setSettings({ amountToleranceCents: value })
+                    setSettings({ amount_tolerance_cents: value })
                   }
                   data-testid="slider-amount-tolerance"
                 />
@@ -91,15 +91,15 @@ export default function SettingsPage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="time-window">Time Window</Label>
-                  <span className="font-mono text-sm">{settings.timeWindowHours} hours</span>
+                  <span className="font-mono text-sm">{settings.time_window_hours} hours</span>
                 </div>
                 <Slider
                   id="time-window"
                   min={1}
                   max={168}
                   step={1}
-                  value={[settings.timeWindowHours]}
-                  onValueChange={([value]: [number]) => setSettings({ timeWindowHours: value })}
+                  value={[settings.time_window_hours]}
+                  onValueChange={([value]: [number]) => setSettings({ time_window_hours: value })}
                   data-testid="slider-time-window"
                 />
                 <p className="text-xs text-muted-foreground">
@@ -110,15 +110,15 @@ export default function SettingsPage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="fuzzy-threshold">Fuzzy Match Threshold</Label>
-                  <span className="font-mono text-sm">{settings.fuzzyThreshold}%</span>
+                  <span className="font-mono text-sm">{settings.fuzzy_threshold}%</span>
                 </div>
                 <Slider
                   id="fuzzy-threshold"
                   min={50}
                   max={100}
                   step={1}
-                  value={[settings.fuzzyThreshold]}
-                  onValueChange={([value]: [number]) => setSettings({ fuzzyThreshold: value })}
+                  value={[settings.fuzzy_threshold]}
+                  onValueChange={([value]: [number]) => setSettings({ fuzzy_threshold: value })}
                   data-testid="slider-fuzzy-threshold"
                 />
                 <p className="text-xs text-muted-foreground">
@@ -143,8 +143,8 @@ export default function SettingsPage() {
                   type="number"
                   min={100}
                   max={50000}
-                  value={settings.maxRows}
-                  onChange={(e) => setSettings({ maxRows: parseInt(e.target.value) || 10000 })}
+                  value={settings.max_rows}
+                  onChange={(e) => setSettings({ max_rows: parseInt(e.target.value) || 10000 })}
                   data-testid="input-max-rows"
                 />
                 <p className="text-xs text-muted-foreground">
@@ -159,8 +159,8 @@ export default function SettingsPage() {
                   type="number"
                   min={100}
                   max={10000}
-                  value={settings.tokenBudget}
-                  onChange={(e) => setSettings({ tokenBudget: parseInt(e.target.value) || 2000 })}
+                  value={settings.token_budget}
+                  onChange={(e) => setSettings({ token_budget: parseInt(e.target.value) || 2000 })}
                   data-testid="input-token-budget"
                 />
                 <p className="text-xs text-muted-foreground">

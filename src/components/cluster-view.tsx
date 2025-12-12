@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { ChevronDown, ChevronRight, Sparkles, Loader2, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/src/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
+import { Badge } from "@/src/components/ui/badge";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+} from "@/src/components/ui/collapsible";
 import {
   Table,
   TableBody,
@@ -15,11 +15,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/src/components/ui/table";
 import { useMutation } from "@tanstack/react-query";
-import { queryClient, apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import type { Cluster } from "@shared/schema";
+import { queryClient, apiRequest } from "@/src/lib/queryClient";
+import { useToast } from "@/src/hooks/use-toast";
+import type { Cluster } from "@/@types";
 
 interface ClusterViewProps {
   clusters: Cluster[];
@@ -39,8 +39,8 @@ function ClusterCard({ cluster, jobId }: { cluster: Cluster; jobId: string }) {
 
   const generateSummaryMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("POST", `/api/cluster/${cluster.id}/generate-summary`, {
-        llmBudgetTokens: 500,
+      return apiRequest("POST", `/api/cluster/${cluster.id}/summary`, {
+        llm_budget_tokens: 500, // FIXED: Changed to snake_case
       });
     },
     onSuccess: () => {
@@ -69,16 +69,16 @@ function ClusterCard({ cluster, jobId }: { cluster: Cluster; jobId: string }) {
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 )}
                 <div>
-                  <CardTitle className="text-base">{cluster.merchantName || "Unknown Merchant"}</CardTitle>
+                  <CardTitle className="text-base">{cluster.merchant_name || "Unknown Merchant"}</CardTitle> {/* FIXED: merchantName to merchant_name */}
                   <p className="text-xs text-muted-foreground mt-1">
-                    {cluster.dateBucket} &middot; {cluster.amountBucket}
+                    {cluster.date_bucket} &middot; {cluster.amount_bucket} {/* FIXED: dateBucket/amountBucket to date_bucket/amount_bucket */}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-right">
                   <p className="font-mono text-lg font-semibold">
-                    {formatCents(cluster.totalAmountCents)}
+                    {formatCents(cluster.total_amount_cents || 0)} {/* FIXED: totalAmountCents to total_amount_cents */}
                   </p>
                   <Badge variant="secondary" className="text-xs">
                     {cluster.size} transactions
@@ -91,32 +91,32 @@ function ClusterCard({ cluster, jobId }: { cluster: Cluster; jobId: string }) {
 
         <CollapsibleContent>
           <CardContent className="pt-0 space-y-4">
-            {cluster.llmSummary ? (
+            {cluster.llm_summary ? ( // FIXED: llmSummary to llm_summary
               <div className="bg-muted/50 rounded-md p-4 space-y-3">
                 <div className="flex items-start gap-2">
                   <Sparkles className="h-4 w-4 text-primary mt-0.5" />
                   <div className="flex-1">
                     <p className="text-sm font-medium mb-2">AI Summary</p>
-                    <p className="text-sm text-muted-foreground">{cluster.llmSummary}</p>
+                    <p className="text-sm text-muted-foreground">{cluster.llm_summary}</p> {/* FIXED: llmSummary to llm_summary */}
                   </div>
                 </div>
-                {cluster.suggestedAction && (
+                {cluster.suggested_action && ( // FIXED: suggestedAction to suggested_action
                   <div className="pt-2 border-t">
                     <p className="text-xs text-muted-foreground mb-1">Suggested Action</p>
-                    <p className="text-sm">{cluster.suggestedAction}</p>
+                    <p className="text-sm">{cluster.suggested_action}</p> {/* FIXED: suggestedAction to suggested_action */}
                   </div>
                 )}
-                {cluster.llmConfidence && (
+                {cluster.llm_confidence && ( // FIXED: llmConfidence to llm_confidence
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground">Confidence:</span>
                     <Badge variant="outline" className="text-xs capitalize">
-                      {cluster.llmConfidence}
+                      {cluster.llm_confidence} {/* FIXED: llmConfidence to llm_confidence */}
                     </Badge>
                   </div>
                 )}
-                {cluster.tokenUsage && cluster.tokenUsage > 0 && (
+                {cluster.token_usage && cluster.token_usage > 0 && ( // FIXED: tokenUsage to token_usage
                   <p className="text-xs text-muted-foreground">
-                    Tokens used: {cluster.tokenUsage}
+                    Tokens used: {cluster.token_usage} {/* FIXED: tokenUsage to token_usage */}
                   </p>
                 )}
               </div>
@@ -161,7 +161,7 @@ function ClusterCard({ cluster, jobId }: { cluster: Cluster; jobId: string }) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {cluster.evidenceIds.slice(0, 10).map((id, idx) => (
+                    {cluster.evidence_ids?.slice(0, 10).map((id, idx) => ( // FIXED: evidenceIds to evidence_ids
                       <TableRow key={id} data-testid={`row-evidence-${id}`}>
                         <TableCell className="font-mono text-xs">{id.slice(0, 8)}...</TableCell>
                         <TableCell>
@@ -176,9 +176,9 @@ function ClusterCard({ cluster, jobId }: { cluster: Cluster; jobId: string }) {
                   </TableBody>
                 </Table>
               </div>
-              {cluster.evidenceIds.length > 10 && (
+              {cluster.evidence_ids && cluster.evidence_ids.length > 10 && ( // FIXED: evidenceIds to evidence_ids
                 <p className="text-xs text-muted-foreground mt-2">
-                  And {cluster.evidenceIds.length - 10} more transactions...
+                  And {cluster.evidence_ids.length - 10} more transactions... {/* FIXED: evidenceIds to evidence_ids */}
                 </p>
               )}
             </div>
@@ -202,7 +202,7 @@ export function ClusterView({ clusters, jobId }: ClusterViewProps) {
   }
 
   const sortedClusters = [...clusters].sort(
-    (a, b) => b.totalAmountCents - a.totalAmountCents
+    (a, b) => (b.total_amount_cents || 0) - (a.total_amount_cents || 0) // FIXED: totalAmountCents to total_amount_cents
   );
 
   return (

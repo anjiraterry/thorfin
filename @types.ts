@@ -1,86 +1,119 @@
+// ============ CORE TYPES ============
+
 export interface Job {
   id: string;
   name?: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
-  createdAt: string;
-  updatedAt: string;
+  status: "pending" | "processing" | "completed" | "failed" | "uploaded";
+  created_at: string;
+  updated_at: string;
   settings: JobSettings;
-  payoutMapping: ColumnMapping;
-  ledgerMapping: ColumnMapping;
-  payoutFile?: string;
-  ledgerFile?: string;
+  payout_mapping: ColumnMapping;
+  ledger_mapping: ColumnMapping;
+  payout_filename?: string;
+  ledger_filename?: string;
+  payout_row_count?: number;
+  ledger_row_count?: number;
+  progress?: number;
+  match_rate?: number;
+  total_unmatched_amount_cents?: number;
+  error_message?: string;
+  matched_count?: number;
+  unmatched_count?: number;
+  completed_at?: string;
+  // Optional computed stats (not in database)
   stats?: {
-    totalPayouts: number;
-    totalLedger: number;
-    matchedCount: number;
-    unmatchedCount: number;
-    matchRate: number;
-    totalUnmatchedAmount: number;
+    total_payouts: number;
+    total_ledger: number;
+    matched_count: number;
+    unmatched_count: number;
+    match_rate: number;
+    total_unmatched_amount: number;
   };
 }
 
 export interface TransactionRecord {
   id: string;
-  txId?: string; // Add this for transaction ID
-  amountCents: number; // Change from 'amount' to 'amountCents' to match your usage
+  job_id: string;
+  source: "payout" | "ledger";
+  source_filename: string;
+  row_index: number;
+  tx_id?: string;
+  amount_cents: number;
   currency: string;
   timestamp: string;
-  fee?: number;
-  merchantId?: string;
+  fee_cents?: number;
+  merchant_id?: string;
   reference?: string;
   metadata?: Record<string, unknown>;
-  // Original data from CSV
+  normalized_fields?: Record<string, unknown>;
   raw: Record<string, unknown>;
+  created_at?: string;
 }
 
 export interface MatchRecord {
   id: string;
-  payoutId: string;
-  ledgerId: string;
+  job_id: string;
+  payout_id: string;
+  ledger_id: string;
   score: number;
   breakdown: ScoreBreakdown;
-  status: 'matched' | 'review' | 'rejected';
-  matchType?: string; // Add this property
-  confidenceLevel?: string; // Add this property
-  accepted?: number; // Add this property (1 = accepted, -1 = rejected, 0/undefined = pending)
+  status: "matched" | "review" | "rejected";
+  match_type?: string;
+  confidence_level?: string;
+  accepted?: number;
   notes?: string;
-  matchedAt: string;
+  matched_at: string;
+  updated_at?: string;
 }
 
 export interface Cluster {
   id: string;
-  pivotId: string;
-  pivotType: 'payout' | 'ledger';
+  job_id: string;
+  pivot_id: string;
+  pivot_type: "payout" | "ledger";
   records: TransactionRecord[];
+  evidence_ids?: string[];
   amount: number;
-  status: 'unmatched' | 'partial' | 'resolved';
+  status: "unmatched" | "partial" | "resolved";
   notes?: string;
+  merchant_name?: string;
+  amount_bucket?: string;
+  date_bucket?: string;
+  total_amount_cents?: number;
+  size?: number;
+  llm_summary?: string;
+  suggested_action?: string;
+  confidence_level?: string;
+  token_usage?: number;
+  llm_confidence?: string;
+  created_at?: string;
 }
 
+// ============ SETTINGS & MAPPING TYPES ============
 
 export interface JobSettings {
-  amountToleranceCents: number;
-  timeWindowHours: number;
-  fuzzyThreshold: number;
-  tokenBudget: number;
-  maxRows: number;
+  amount_tolerance_cents: number;
+  time_window_hours: number;
+  fuzzy_threshold: number;
+  token_budget: number;
+  max_rows: number;
 }
 
 export interface ColumnMapping {
-  txId?: string;
+  tx_id?: string;
   amount: string;
   currency?: string;
   timestamp?: string;
   fee?: string;
-  merchantId?: string;
+  merchant_id?: string;
   reference?: string;
 }
 
 export interface ScoreBreakdown {
-  exactMatch: number;
-  amountScore: number;
-  timeScore: number;
-  fuzzyScore: number;
+  exact_match: number;
+  amount_score: number;
+  time_score: number;
+  fuzzy_score: number;
   weights: {
     exact: number;
     amount: number;
@@ -89,54 +122,183 @@ export interface ScoreBreakdown {
   };
 }
 
-// Default settings
+// ============ DEFAULT SETTINGS ============
+
 export const defaultSettings: JobSettings = {
-  amountToleranceCents: 100,
-  timeWindowHours: 48,
-  fuzzyThreshold: 85,
-  tokenBudget: 2000,
-  maxRows: 10000,
+  amount_tolerance_cents: 100,
+  time_window_hours: 48,
+  fuzzy_threshold: 85,
+  token_budget: 2000,
+  max_rows: 10000,
 };
 
-// API response types
+// ============ API RESPONSE TYPES ============
+
 export interface JobResultsResponse {
   job: Job;
   stats: {
-    totalPayouts: number;
-    totalLedger: number;
-    matchedCount: number;
-    unmatchedCount: number;
-    matchRate: number;
-    totalUnmatchedAmount: number;
+    total_payouts: number;
+    total_ledger: number;
+    matched_count: number;
+    unmatched_count: number;
+    match_rate: number;
+    total_unmatched_amount: number;
   };
   matches: (MatchRecord & {
     payout: TransactionRecord;
     ledger: TransactionRecord;
   })[];
-  unmatchedPayouts: TransactionRecord[];
-  unmatchedLedger: TransactionRecord[];
+  unmatched_payouts: TransactionRecord[];
+  unmatched_ledger: TransactionRecord[];
   clusters: Cluster[];
 }
 
 export interface UploadResponse {
-  jobId: string;
+  job_id: string;
   status: string;
-  payoutColumns?: string[];
-  ledgerColumns?: string[];
-  payoutPreview?: Record<string, unknown>[];
-  ledgerPreview?: Record<string, unknown>[];
+  payout_columns?: string[];
+  ledger_columns?: string[];
+  payout_preview?: Record<string, unknown>[];
+  ledger_preview?: Record<string, unknown>[];
 }
 
 export interface StartJobRequest {
-  jobId: string;
-  payoutMapping: ColumnMapping;
-  ledgerMapping: ColumnMapping;
+  job_id: string;
+  payout_mapping: ColumnMapping;
+  ledger_mapping: ColumnMapping;
   settings?: Partial<JobSettings>;
 }
 
 export interface JobStatusResponse {
+  job_id: string;
   status: string;
   progress: number;
-  matchRate?: number;
-  errorMessage?: string;
+  match_rate?: number;
+  error_message?: string;
+
+  matched_count?: number;
+  unmatched_count?: number;
+  updated_at: string;
+  completed_at?: string;
+}
+
+// ============ DATABASE TYPES ============
+
+export type InsertJob = Omit<Job, "id" | "created_at" | "updated_at"> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type InsertTransactionRecord = Omit<TransactionRecord, "id"> & {
+  id?: string;
+};
+
+export type InsertMatchRecord = Omit<MatchRecord, "id" | "matched_at"> & {
+  id?: string;
+  matched_at?: string;
+};
+
+export type InsertCluster = Omit<Cluster, "id"> & {
+  id?: string;
+};
+
+export interface AuditLog {
+  id: string;
+  job_id: string;
+  action: string;
+  details?: Record<string, unknown>;
+  target_id?: string;
+  target_type?: string;
+  timestamp: string;
+}
+
+export type InsertAuditLog = Omit<AuditLog, "id" | "timestamp"> & {
+  id?: string;
+  timestamp?: string;
+};
+
+// ============ STORAGE INTERFACE ============
+
+export interface IStorage {
+  // Jobs
+  createJob(job: InsertJob): Promise<Job>;
+  getJob(id: string): Promise<Job | undefined>;
+  updateJob(id: string, updates: Partial<Job>): Promise<Job | undefined>;
+
+  // Transaction Records
+  createTransactionRecord(
+    record: InsertTransactionRecord
+  ): Promise<TransactionRecord>;
+  createTransactionRecords(
+    records: InsertTransactionRecord[]
+  ): Promise<TransactionRecord[]>;
+  getTransactionsByJob(job_id: string): Promise<TransactionRecord[]>;
+  getTransactionsByJobAndSource(
+    job_id: string,
+    source: "payout" | "ledger"
+  ): Promise<TransactionRecord[]>;
+  getUnmatchedTransactions(
+    job_id: string,
+    source: "payout" | "ledger",
+    matched_ids: string[]
+  ): Promise<TransactionRecord[]>;
+  getTransactionById(id: string): Promise<TransactionRecord | undefined>;
+
+  // Match Records
+  createMatchRecord(record: InsertMatchRecord): Promise<MatchRecord>;
+  createMatchRecords(records: InsertMatchRecord[]): Promise<MatchRecord[]>;
+  getMatchesByJob(job_id: string): Promise<MatchRecord[]>;
+  getMatchById(id: string): Promise<MatchRecord | undefined>;
+  updateMatch(
+    id: string,
+    updates: Partial<MatchRecord>
+  ): Promise<MatchRecord | undefined>;
+  getMatchWithTransactions(
+    id: string
+  ): Promise<
+    | (MatchRecord & { payout: TransactionRecord; ledger: TransactionRecord })
+    | undefined
+  >;
+  getMatchesWithTransactions(
+    job_id: string
+  ): Promise<
+    (MatchRecord & { payout: TransactionRecord; ledger: TransactionRecord })[]
+  >;
+
+  // Clusters
+  createCluster(cluster: InsertCluster): Promise<Cluster>;
+  createClusters(clusterData: InsertCluster[]): Promise<Cluster[]>;
+  getClustersByJob(job_id: string): Promise<Cluster[]>;
+  getClusterById(id: string): Promise<Cluster | undefined>;
+  updateCluster(
+    id: string,
+    updates: Partial<Cluster>
+  ): Promise<Cluster | undefined>;
+
+  // Audit Logs
+  createAuditLog(log: InsertAuditLog): Promise<AuditLog>;
+  getAuditLogsByJob(job_id: string): Promise<AuditLog[]>;
+}
+
+// ============ CLUSTER DATA TYPES (for processing) ============
+
+export interface ClusterData {
+  pivot_id: string;
+  pivot_type: "payout" | "ledger";
+  records: TransactionRecord[];
+  amount: number;
+  status: "unmatched" | "partial" | "resolved";
+  notes?: string;
+}
+
+// ============ MATCH RESULT TYPES (for matching engine) ============
+
+export interface MatchResult {
+  payout_id: string;
+  ledger_id: string;
+  score: number;
+  score_breakdown: ScoreBreakdown;
+  match_type: string;
+  confidence_level: string;
 }

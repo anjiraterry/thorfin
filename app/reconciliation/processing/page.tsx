@@ -14,36 +14,47 @@ const POLL_INTERVAL = 1000;
 
 export default function ProcessingPage() {
   const router = useRouter();
-  const { currentJobId } = useAppStore();
+  const { current_job_id } = useAppStore();
 
-  const { data: status, error } = useQuery<JobStatusResponse>({
-    queryKey: ["/api/job", currentJobId, "status"],
-    enabled: !!currentJobId,
-    refetchInterval: (query) => {
-      const data = query.state.data;
-      if (data?.status === "completed" || data?.status === "failed") {
-        return false;
-      }
-      return POLL_INTERVAL;
-    },
-  });
+const { data: status, error } = useQuery<JobStatusResponse>({
+  queryKey: ["job-status", current_job_id],
+  queryFn: async () => {
+    if (!current_job_id) throw new Error("No job ID");
+    
+    const response = await fetch(`/api/job/${current_job_id}/status`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch job status: ${response.status}`);
+    }
+    
+    return await response.json();
+  },
+  enabled: !!current_job_id,
+  refetchInterval: (query) => {
+    const data = query.state.data;
+    if (data?.status === "completed" || data?.status === "failed") {
+      return false;
+    }
+    return POLL_INTERVAL;
+  },
+});
 
   useEffect(() => {
-    if (!currentJobId) {
+    if (!current_job_id) {
       router.push("/");
     }
-  }, [currentJobId, router]);
+  }, [current_job_id, router]);
 
   useEffect(() => {
     if (status?.status === "completed") {
       const timeout = setTimeout(() => {
-        router.push("/results");
+        router.push("/reconciliation/results");
       }, 1500);
       return () => clearTimeout(timeout);
     }
   }, [status?.status, router]);
 
-  if (!currentJobId) {
+  if (!current_job_id) {
     return null;
   }
 
@@ -94,18 +105,18 @@ export default function ProcessingPage() {
             <Progress value={progress} className="h-2" />
           </div>
 
-          {status?.matchRate !== undefined && status.matchRate > 0 && (
+          {status?.match_rate !== undefined && status.match_rate > 0 && (
             <div className="text-center">
               <p className="text-sm text-muted-foreground">Current match rate</p>
               <p className="text-2xl font-semibold font-mono">
-                {(status.matchRate * 100).toFixed(1)}%
+                {(status.match_rate * 100).toFixed(1)}%
               </p>
             </div>
           )}
 
-          {isFailed && status?.errorMessage && (
+          {isFailed && status?.error_message && (
             <div className="bg-destructive/10 border border-destructive/20 rounded-md p-4">
-              <p className="text-sm text-destructive">{status.errorMessage}</p>
+              <p className="text-sm text-destructive">{status.error_message}</p>
             </div>
           )}
 

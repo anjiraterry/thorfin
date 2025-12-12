@@ -1,11 +1,11 @@
 import { Check, X, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Progress } from "@/components/ui/progress";
-import type { MatchRecord, TransactionRecord, ScoreBreakdown } from "@shared/schema";
+import { Button } from "@/src/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
+import { Badge } from "@/src/components/ui/badge";
+import { Separator } from "@/src/components/ui/separator";
+import { ScrollArea } from "@/src/components/ui/scroll-area";
+import { Progress } from "@/src/components/ui/progress";
+import type { MatchRecord, TransactionRecord, ScoreBreakdown } from "@/@types";
 
 interface MatchInspectorProps {
   match?: (MatchRecord & { payout: TransactionRecord; ledger: TransactionRecord }) | null;
@@ -49,15 +49,15 @@ function TransactionDetails({ tx, title }: { tx: TransactionRecord; title: strin
       <div className="bg-background rounded-md p-3 space-y-2 border">
         <div className="flex justify-between items-center">
           <span className="text-xs text-muted-foreground">ID</span>
-          <span className="font-mono text-xs">{tx.txId || "-"}</span>
+          <span className="font-mono text-xs">{tx.tx_id || "-"}</span> {/* FIXED: txId to tx_id */}
         </div>
         <div className="flex justify-between items-center">
           <span className="text-xs text-muted-foreground">Amount</span>
-          <span className="font-mono text-sm font-medium">{formatCents(tx.amountCents)}</span>
+          <span className="font-mono text-sm font-medium">{formatCents(tx.amount_cents)}</span> {/* FIXED: amountCents to amount_cents */}
         </div>
         <div className="flex justify-between items-center">
           <span className="text-xs text-muted-foreground">Merchant</span>
-          <span className="text-xs truncate max-w-[150px]">{tx.merchantId || "-"}</span>
+          <span className="text-xs truncate max-w-[150px]">{tx.merchant_id || "-"}</span> {/* FIXED: merchantId to merchant_id */}
         </div>
         <div className="flex justify-between items-center">
           <span className="text-xs text-muted-foreground">Date</span>
@@ -85,7 +85,7 @@ export function MatchInspector({ match, onAccept, onReject, isAccepting, isRejec
     );
   }
 
-  const breakdown = match.scoreBreakdown as ScoreBreakdown;
+  const breakdown = match.breakdown as ScoreBreakdown; // FIXED: scoreBreakdown to breakdown
   const totalScore = match.score * 100;
 
   return (
@@ -94,17 +94,17 @@ export function MatchInspector({ match, onAccept, onReject, isAccepting, isRejec
         <div className="flex items-center justify-between">
           <div>
             <Badge variant="outline" className="capitalize mb-2">
-              {match.matchType}
+              {match.match_type} {/* FIXED: matchType to match_type */}
             </Badge>
             <h3 className="text-lg font-semibold">Match Details</h3>
           </div>
           <div className="text-right">
             <p className="text-3xl font-bold font-mono">{totalScore.toFixed(0)}%</p>
             <Badge
-              variant={match.confidenceLevel === "high" ? "default" : match.confidenceLevel === "medium" ? "secondary" : "destructive"}
+              variant={match.confidence_level === "high" ? "default" : match.confidence_level === "medium" ? "secondary" : "destructive"} 
               className="capitalize"
             >
-              {match.confidenceLevel}
+              {match.confidence_level} 
             </Badge>
           </div>
         </div>
@@ -115,25 +115,25 @@ export function MatchInspector({ match, onAccept, onReject, isAccepting, isRejec
           <h4 className="text-sm font-medium">Score Breakdown</h4>
           <ScoreBar
             label="Exact Match"
-            value={breakdown.exactMatch}
+            value={breakdown.exact_match} 
             weight={breakdown.weights.exact}
             color="bg-chart-1"
           />
           <ScoreBar
             label="Amount"
-            value={breakdown.amountScore}
+            value={breakdown.amount_score} 
             weight={breakdown.weights.amount}
             color="bg-chart-2"
           />
           <ScoreBar
             label="Timestamp"
-            value={breakdown.timeScore}
+            value={breakdown.time_score} 
             weight={breakdown.weights.time}
             color="bg-chart-4"
           />
           <ScoreBar
             label="Fuzzy Reference"
-            value={breakdown.fuzzyScore}
+            value={breakdown.fuzzy_score} 
             weight={breakdown.weights.fuzzy}
             color="bg-chart-3"
           />
@@ -190,8 +190,8 @@ export function MatchInspector({ match, onAccept, onReject, isAccepting, isRejec
         )}
 
         <div className="text-xs text-muted-foreground">
-          <p>Row: Payout #{match.payout.rowIndex + 1}, Ledger #{match.ledger.rowIndex + 1}</p>
-          <p>Created: {new Date(match.createdAt!).toLocaleString()}</p>
+          <p>Row: Payout #{match.payout.row_index + 1}, Ledger #{match.ledger.row_index + 1}</p> {/* FIXED: rowIndex to row_index */}
+          <p>Created: {new Date(match.matched_at!).toLocaleString()}</p> {/* FIXED: createdAt to matched_at */}
         </div>
       </div>
     </ScrollArea>

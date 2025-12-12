@@ -15,12 +15,12 @@ import { useToast } from "@/src/hooks/use-toast";
 import { useAppStore } from "@/src/lib/store";
 
 const CANONICAL_FIELDS = [
-  { key: "txId", label: "Transaction ID", required: false },
+  { key: "tx_id", label: "Transaction ID", required: false },
   { key: "amount", label: "Amount", required: true },
   { key: "currency", label: "Currency", required: false },
   { key: "timestamp", label: "Timestamp/Date", required: false },
   { key: "fee", label: "Fee", required: false },
-  { key: "merchantId", label: "Merchant ID", required: false },
+  { key: "merchant_id", label: "Merchant ID", required: false },
   { key: "reference", label: "Reference/Note", required: false },
 ];
 
@@ -32,7 +32,7 @@ function autoDetectMapping(columns: string[]): Partial<ColumnMapping> {
     const lower = lowerColumns[idx];
     
     if (lower.includes("payout_id") || lower.includes("tx_id") || lower.includes("entry_id") || lower.includes("transaction_id")) {
-      mapping.txId = col;
+      mapping.tx_id = col;
     } else if (lower === "amount" || lower.includes("amount")) {
       mapping.amount = col;
     } else if (lower === "currency" || lower.includes("currency")) {
@@ -42,7 +42,7 @@ function autoDetectMapping(columns: string[]): Partial<ColumnMapping> {
     } else if (lower.includes("fee")) {
       mapping.fee = col;
     } else if (lower.includes("merchant")) {
-      mapping.merchantId = col;
+      mapping.merchant_id = col;
     } else if (lower.includes("reference") || lower.includes("note") || lower === "ref") {
       mapping.reference = col;
     }
@@ -133,13 +133,13 @@ export default function MappingPage() {
   const router = useRouter();
   const { toast } = useToast();
   const {
-    currentJobId,
-    payoutColumns,
-    ledgerColumns,
-    payoutPreview,
-    ledgerPreview,
-    payoutMapping,
-    ledgerMapping,
+    current_job_id,
+    payout_columns,
+    ledger_columns,
+    payout_preview,
+    ledger_preview,
+    payout_mapping,
+    ledger_mapping,
     setPayoutMapping,
     setLedgerMapping,
     settings,
@@ -150,16 +150,16 @@ export default function MappingPage() {
   const [isStarting, setIsStarting] = useState(false);
 
   useEffect(() => {
-    if (!currentJobId) {
+    if (!current_job_id) {
       router.push("/");
       return;
     }
 
-    const autoPayoutMapping = autoDetectMapping(payoutColumns);
-    const autoLedgerMapping = autoDetectMapping(ledgerColumns);
+    const autoPayoutMapping = autoDetectMapping(payout_columns);
+    const autoLedgerMapping = autoDetectMapping(ledger_columns);
     setLocalPayoutMapping(autoPayoutMapping);
     setLocalLedgerMapping(autoLedgerMapping);
-  }, [currentJobId, payoutColumns, ledgerColumns, router]);
+  }, [current_job_id, payout_columns, ledger_columns, router]);
 
   const handlePayoutMappingChange = (field: keyof ColumnMapping, value: string) => {
     setLocalPayoutMapping((prev: any) => ({
@@ -176,8 +176,8 @@ export default function MappingPage() {
   };
 
   const handleAutoDetect = () => {
-    const autoPayoutMapping = autoDetectMapping(payoutColumns);
-    const autoLedgerMapping = autoDetectMapping(ledgerColumns);
+    const autoPayoutMapping = autoDetectMapping(payout_columns);
+    const autoLedgerMapping = autoDetectMapping(ledger_columns);
     setLocalPayoutMapping(autoPayoutMapping);
     setLocalLedgerMapping(autoLedgerMapping);
     toast({
@@ -208,7 +208,7 @@ export default function MappingPage() {
 
   const handleStartProcessing = async () => {
     if (!validateMappings()) return;
-    if (!currentJobId) return;
+    if (!current_job_id) return;
 
     setIsStarting(true);
 
@@ -217,9 +217,9 @@ export default function MappingPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          jobId: currentJobId,
-          payoutMapping: localPayoutMapping as ColumnMapping,
-          ledgerMapping: localLedgerMapping as ColumnMapping,
+          job_id: current_job_id,
+          payout_mapping: localPayoutMapping as ColumnMapping,
+          ledger_mapping: localLedgerMapping as ColumnMapping,
           settings,
         }),
       });
@@ -231,7 +231,7 @@ export default function MappingPage() {
       setPayoutMapping(localPayoutMapping as ColumnMapping);
       setLedgerMapping(localLedgerMapping as ColumnMapping);
 
-      router.push("/processing");
+      router.push("/reconciliation/processing");
     } catch (error) {
       toast({
         title: "Failed to start processing",
@@ -243,7 +243,7 @@ export default function MappingPage() {
     }
   };
 
-  if (!currentJobId) {
+  if (!current_job_id) {
     return null;
   }
 
@@ -266,16 +266,16 @@ export default function MappingPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <MappingCard
             title="Payouts Mapping"
-            columns={payoutColumns}
-            preview={payoutPreview}
+            columns={payout_columns}
+            preview={payout_preview}
             mapping={localPayoutMapping}
             onMappingChange={handlePayoutMappingChange}
             testIdPrefix="select-payout"
           />
           <MappingCard
             title="Ledger Mapping"
-            columns={ledgerColumns}
-            preview={ledgerPreview}
+            columns={ledger_columns}
+            preview={ledger_preview}
             mapping={localLedgerMapping}
             onMappingChange={handleLedgerMappingChange}
             testIdPrefix="select-ledger"
