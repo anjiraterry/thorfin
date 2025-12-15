@@ -1,160 +1,155 @@
 "use client"
-import { ArrowRight, FileCheck, Shield, Zap, CheckCircle } from "lucide-react";
+import {
+  ArrowRight,
+  FileCheck,
+  Shield,
+  Zap,
+  CheckCircle,
+  Upload,
+  SlidersHorizontal,
+  Cpu,
+  Download
+} from "lucide-react";
+import { ThemeToggle } from "@/src/components/theme-toggle";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="relative min-h-screen overflow-hidden bg-white text-slate-600 dark:bg-gray-900 dark:text-slate-300">
+
+      {/* subtle decorative gradient orbs */}
+      <div className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full bg-linear-to-br from-blue-500/10 to-indigo-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute top-[40%] -right-40 h-[28rem] w-[28rem] rounded-full bg-linear-to-br from-indigo-500/10 to-blue-500/10 blur-3xl" />
+
       {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
-              <Zap className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-semibold text-lg">FinOps Prep Suite</span>
-          </div>
-          <div className="text-sm text-slate-600">
-            Save 10+ hours per week on finance prep work
-          </div>
-        </div>
-      </header>
+    
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-6 pt-20 pb-16 text-center">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-full text-sm font-medium mb-6">
-          <CheckCircle className="w-4 h-4" />
+      <section className="mx-auto max-w-6xl px-6 pt-20 pb-16 text-center">
+        <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-200">
+          <CheckCircle className="h-4 w-4" />
           Automate repetitive finance & compliance prep work
         </div>
-        
-        <h1 className="text-5xl font-bold tracking-tight mb-6 max-w-3xl mx-auto">
+
+        <h1 className="mx-auto mb-6 max-w-3xl text-5xl font-semibold tracking-tight text-slate-900 dark:text-white">
           Stop drowning in reconciliation and compliance paperwork
         </h1>
-        
-        <p className="text-xl text-slate-600 mb-12 max-w-2xl mx-auto">
-          Two brutal, boring, high-value fintech automations that save your team hours every week. 
-          No touching regulated decisions. Just the prep work nobody wants to do.
+
+        <p className="mx-auto max-w-2xl text-lg text-slate-600 dark:text-slate-400">
+          Two boring, high-leverage fintech automations that save real hours.
+          No regulated decisions. No production access. Just work that disappears.
         </p>
       </section>
 
-      {/* Module Cards */}
-      <section className="max-w-6xl mx-auto px-6 pb-20">
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Module A: Reconciliation */}
-          <div className="group relative bg-white rounded-2xl border-2 border-slate-200 hover:border-blue-500 transition-all duration-300 overflow-hidden hover:shadow-xl">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-transparent rounded-bl-full" />
-            
-            <div className="relative p-8">
-              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
-                <FileCheck className="w-6 h-6 text-blue-600" />
+      {/* Modules */}
+      <section className="mx-auto max-w-6xl px-6 pb-20">
+        <div className="grid gap-8 md:grid-cols-2">
+
+          {/* Reconciliation */}
+          <div className="group relative rounded-2xl border-2 border-slate-200 bg-white transition-all hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/5 dark:border-gray-800 dark:bg-slate-800/60 dark:hover:border-blue-400">
+            <div className="p-8">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900/30">
+                <FileCheck className="h-6 w-6 text-blue-600 dark:text-blue-300" />
               </div>
-              
-              <h2 className="text-2xl font-bold mb-3">Reconciliation Assistant</h2>
-              <p className="text-slate-600 mb-6">
-                Match payout CSVs with ledger entries automatically. Get exception clusters with AI summaries.
+
+              <h2 className="mb-2 text-2xl font-semibold text-slate-900 dark:text-white">
+                Reconciliation Assistant
+              </h2>
+
+              <p className="mb-6 text-slate-600 dark:text-slate-400">
+                Match payout exports with ledger data. Surface exceptions.
+                Explain what broke and why.
               </p>
-              
-              <div className="space-y-3 mb-8">
+
+              <div className="mb-6 space-y-3">
                 <Feature text="Deterministic matching engine" />
-                <Feature text="Exception clustering & analysis" />
-                <Feature text="AI-generated summaries" />
-                <Feature text="Exportable PDF reports" />
+                <Feature text="Exception clustering" />
+                <Feature text="AI reconciliation summaries" />
+                <Feature text="Exportable evidence reports" />
               </div>
-              
-              <div className="bg-slate-50 rounded-lg p-4 mb-6">
-                <div className="text-xs text-slate-500 uppercase tracking-wide font-medium mb-2">
-                  Time Saved
+
+              <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-gray-700 dark:bg-gray-900">
+                <div className="text-xs uppercase tracking-wide text-slate-500">
+                  Time saved
                 </div>
-                <div className="text-3xl font-bold text-blue-600">
-                  4-10 hours/week
+                <div className="text-2xl font-semibold text-slate-900 dark:text-white">
+                  4–10 hrs/week
                 </div>
               </div>
-              
-              <button 
-                onClick={() => window.location.href = '/reconciliation/upload'}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors group-hover:scale-[1.02] transition-transform"
+
+              <button
+                onClick={() => (window.location.href = "/reconciliation/upload")}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-500 px-6 py-3 font-medium text-white transition hover:from-blue-600 hover:to-indigo-600"
               >
                 Start Reconciliation
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="h-5 w-5" />
               </button>
             </div>
           </div>
 
-          {/* Module B: Compliance Prep */}
-          <div className="group relative bg-white rounded-2xl border-2 border-slate-200 hover:border-emerald-500 transition-all duration-300 overflow-hidden hover:shadow-xl">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-50 to-transparent rounded-bl-full" />
-            
-            <div className="relative p-8">
-              <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center mb-4">
-                <Shield className="w-6 h-6 text-emerald-600" />
+          {/* Compliance */}
+          <div className="group relative rounded-2xl border-2 border-slate-200 bg-white transition-all hover:border-indigo-400 hover:shadow-lg hover:shadow-indigo-500/5 dark:border-gray-800 dark:bg-slate-800/60 dark:hover:border-indigo-400">
+            <div className="p-8">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 dark:bg-indigo-900/30">
+                <Shield className="h-6 w-6 text-indigo-600 dark:text-indigo-300" />
               </div>
-              
-              <h2 className="text-2xl font-bold mb-3">Compliance Prep Assistant</h2>
-              <p className="text-slate-600 mb-6">
-                Process KYC documents with OCR, extract fields, flag issues, and generate reviewer packets.
+
+              <h2 className="mb-2 text-2xl font-semibold text-slate-900 dark:text-white">
+                Compliance Prep Assistant
+              </h2>
+
+              <p className="mb-6 text-slate-600 dark:text-slate-400">
+                Pre-process KYC documents, flag gaps, and generate
+                reviewer-ready packets.
               </p>
-              
-              <div className="space-y-3 mb-8">
-                <Feature text="Bulk document processing" />
+
+              <div className="mb-6 space-y-3">
+                <Feature text="Bulk document ingestion" />
                 <Feature text="OCR + field extraction" />
                 <Feature text="Quality & completeness checks" />
-                <Feature text="Reviewer-ready packets" />
+                <Feature text="Audit-friendly outputs" />
               </div>
-              
-              <div className="bg-slate-50 rounded-lg p-4 mb-6">
-                <div className="text-xs text-slate-500 uppercase tracking-wide font-medium mb-2">
-                  Time Saved
+
+              <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-gray-700 dark:bg-gray-900">
+                <div className="text-xs uppercase tracking-wide text-slate-500">
+                  Time saved
                 </div>
-                <div className="text-3xl font-bold text-emerald-600">
-                  6-12 hours/week
+                <div className="text-2xl font-semibold text-slate-900 dark:text-white">
+                  6–12 hrs/week
                 </div>
               </div>
-              
-              <button 
-                onClick={() => window.location.href = '/compliance/upload'}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors group-hover:scale-[1.02] transition-transform"
+
+              <button
+                onClick={() => (window.location.href = "/compliance/upload")}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-500 px-6 py-3 font-medium text-white transition hover:from-indigo-600 hover:to-blue-600"
               >
                 Start Compliance Review
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="h-5 w-5" />
               </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="bg-slate-50 py-20">
-        <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-3xl font-bold text-center mb-12">Simple, Fast, Reliable</h2>
-          
-          <div className="grid md:grid-cols-4 gap-8">
-            <Step 
-              number="1" 
-              title="Upload" 
-              description="Drop your files or upload in bulk"
-            />
-            <Step 
-              number="2" 
-              title="Map" 
-              description="Auto-detect columns or map manually"
-            />
-            <Step 
-              number="3" 
-              title="Process" 
-              description="Deterministic rules + AI summaries"
-            />
-            <Step 
-              number="4" 
-              title="Export" 
-              description="Download PDF reports and CSVs"
-            />
+      {/* How it works */}
+      <section className="bg-white py-20 dark:bg-gray-900">
+        <div className="mx-auto max-w-6xl px-6">
+          <h2 className="mb-12 text-center text-3xl font-semibold text-slate-900 dark:text-white">
+            Simple. Predictable. Boring in the right way.
+          </h2>
+
+          <div className="grid gap-8 md:grid-cols-4">
+            <Step icon={Upload} title="Upload" desc="Drop files or bulk exports" />
+            <Step icon={SlidersHorizontal} title="Map" desc="Auto-detect or adjust columns" />
+            <Step icon={Cpu} title="Process" desc="Rules first, AI second" />
+            <Step icon={Download} title="Export" desc="PDFs, CSVs, evidence" />
           </div>
         </div>
       </section>
 
       {/* Stats */}
-      <section className="py-20">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="grid md:grid-cols-3 gap-8 text-center">
+      <section className="bg-slate-50 py-20 dark:bg-gray-900">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid gap-8 text-center md:grid-cols-3">
             <Stat value="10+" label="Hours saved per week" />
             <Stat value="85%+" label="Auto-match rate" />
             <Stat value="100%" label="Evidence-backed output" />
@@ -163,10 +158,10 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t py-8">
-        <div className="max-w-6xl mx-auto px-6 text-center text-sm text-slate-600">
-          <p>FinOps Prep Suite — Built for finance and compliance teams who value their time</p>
-        </div>
+      <footer className="border-t border-slate-200 py-8 dark:border-gray-800">
+        <p className="text-center text-sm text-slate-500 dark:text-slate-400">
+          Thorfin· Built for teams who work with time
+        </p>
       </footer>
     </div>
   );
@@ -174,23 +169,31 @@ export default function LandingPage() {
 
 function Feature({ text }: { text: string }) {
   return (
-    <div className="flex items-center gap-2">
-      <div className="w-5 h-5 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0">
-        <CheckCircle className="w-3 h-3 text-blue-600" />
-      </div>
-      <span className="text-sm text-slate-700">{text}</span>
+    <div className="flex items-center gap-2 text-sm">
+      <CheckCircle className="h-4 w-4 text-slate-400" />
+      <span>{text}</span>
     </div>
   );
 }
 
-function Step({ number, title, description }: { number: string; title: string; description: string }) {
+function Step({
+  icon: Icon,
+  title,
+  desc
+}: {
+  icon: any;
+  title: string;
+  desc: string;
+}) {
   return (
     <div className="text-center">
-      <div className="w-12 h-12 bg-white border-2 border-blue-200 rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-blue-600">
-        {number}
+      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-slate-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+        <Icon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
       </div>
-      <h3 className="font-semibold mb-2">{title}</h3>
-      <p className="text-sm text-slate-600">{description}</p>
+      <h3 className="mb-1 font-medium text-slate-900 dark:text-white">
+        {title}
+      </h3>
+      <p className="text-sm text-slate-600 dark:text-slate-400">{desc}</p>
     </div>
   );
 }
@@ -198,8 +201,10 @@ function Step({ number, title, description }: { number: string; title: string; d
 function Stat({ value, label }: { value: string; label: string }) {
   return (
     <div>
-      <div className="text-4xl font-bold text-slate-900 mb-2">{value}</div>
-      <div className="text-slate-600">{label}</div>
+      <div className="mb-1 text-4xl font-semibold text-slate-900 dark:text-white">
+        {value}
+      </div>
+      <div className="text-slate-600 dark:text-slate-400">{label}</div>
     </div>
   );
 }

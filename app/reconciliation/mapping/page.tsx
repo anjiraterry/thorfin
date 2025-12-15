@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ArrowLeft, Sparkles, AlertCircle } from "lucide-react";
+import { ArrowRight, ArrowLeft, Sparkles, Info, Zap } from "lucide-react";
 
 import type { ColumnMapping } from "@/@types";
 import { Badge } from "@/src/components/ui/badge";
@@ -62,30 +62,42 @@ interface MappingCardProps {
 
 function MappingCard({ title, columns, preview, mapping, onMappingChange, testIdPrefix }: MappingCardProps) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">{title}</CardTitle>
-        <CardDescription>Map your columns to standard fields</CardDescription>
+    <Card className="border-2 border-slate-200 bg-white dark:border-gray-800 dark:bg-slate-800/60 rounded-2xl shadow-sm hover:shadow-lg transition-shadow overflow-hidden h-full flex flex-col">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-xl font-semibold text-slate-900 dark:text-white">{title}</CardTitle>
+        <CardDescription className="text-slate-600 dark:text-slate-400">
+          Map your columns to standard fields
+        </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-6 flex-1 overflow-hidden flex flex-col">
         <div className="grid grid-cols-2 gap-4">
           {CANONICAL_FIELDS.map((field) => (
             <div key={field.key} className="space-y-2">
-              <Label className="flex items-center gap-2">
+              <Label className="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-white">
                 {field.label}
-                {field.required && <Badge variant="secondary" className="text-xs">Required</Badge>}
+                {field.required && (
+                  <Badge 
+                    variant="secondary" 
+                    className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200 border-none"
+                  >
+                    Required
+                  </Badge>
+                )}
               </Label>
               <Select
                 value={mapping[field.key as keyof ColumnMapping] || ""}
                 onValueChange={(value: string) => onMappingChange(field.key as keyof ColumnMapping, value)}
               >
-                <SelectTrigger data-testid={`${testIdPrefix}-${field.key}`}>
+                <SelectTrigger 
+                  className="border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-blue-400 transition-colors rounded-xl"
+                  data-testid={`${testIdPrefix}-${field.key}`}
+                >
                   <SelectValue placeholder="Select column..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl">
                   <SelectItem value="__none__">-- None --</SelectItem>
                   {columns.map((col) => (
-                    <SelectItem key={col} value={col}>
+                    <SelectItem key={col} value={col} className="focus:bg-blue-50 dark:focus:bg-blue-900/20">
                       {col}
                     </SelectItem>
                   ))}
@@ -95,15 +107,20 @@ function MappingCard({ title, columns, preview, mapping, onMappingChange, testId
           ))}
         </div>
 
-        {preview.length > 0 && (
-          <div className="mt-6">
-            <Label className="mb-2 block">Preview (first 3 rows)</Label>
-            <div className="border rounded-md overflow-auto max-h-48">
+          {preview.length > 0 && (
+          <div className="mt-6 ">
+            <Label className="mb-2 block text-sm font-medium text-slate-900 dark:text-white">
+              Preview (first 3 rows)
+            </Label>
+            <div className="border pb-2 border-slate-200 dark:border-gray-700 rounded-xl overflow-auto  max-h-48 bg-white dark:bg-gray-800">
               <Table>
-                <TableHeader>
+                <TableHeader className="bg-slate-50 dark:bg-gray-700/50">
                   <TableRow>
                     {columns.slice(0, 6).map((col) => (
-                      <TableHead key={col} className="font-mono text-xs whitespace-nowrap">
+                      <TableHead 
+                        key={col} 
+                        className="font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap text-xs py-3"
+                      >
                         {col}
                       </TableHead>
                     ))}
@@ -111,9 +128,15 @@ function MappingCard({ title, columns, preview, mapping, onMappingChange, testId
                 </TableHeader>
                 <TableBody>
                   {preview.slice(0, 3).map((row, idx) => (
-                    <TableRow key={idx}>
+                    <TableRow 
+                      key={idx} 
+                      className="border-b border-slate-100 dark:border-gray-700 last:border-0 hover:bg-slate-50 dark:hover:bg-gray-700/30"
+                    >
                       {columns.slice(0, 6).map((col) => (
-                        <TableCell key={col} className="font-mono text-xs whitespace-nowrap">
+                        <TableCell 
+                          key={col} 
+                          className="font-mono text-xs whitespace-nowrap text-slate-600 dark:text-slate-400 py-2"
+                        >
                           {String(row[col] ?? "")}
                         </TableCell>
                       ))}
@@ -138,8 +161,6 @@ export default function MappingPage() {
     ledger_columns,
     payout_preview,
     ledger_preview,
-    payout_mapping,
-    ledger_mapping,
     setPayoutMapping,
     setLedgerMapping,
     settings,
@@ -248,22 +269,37 @@ export default function MappingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-semibold mb-1">Column Mapping</h1>
-            <p className="text-muted-foreground text-sm">
-              Map your file columns to standard transaction fields
-            </p>
-          </div>
-          <Button variant="outline" onClick={handleAutoDetect} data-testid="button-auto-detect">
+    <div className="min-h-screen bg-white dark:bg-gray-900 overflow-x-hidden">
+      {/* subtle gradient accents */}
+      <div className="pointer-events-none fixed -top-32 -left-32 h-96 w-96 rounded-full bg-gradient-to-br from-blue-500/10 to-indigo-500/10 blur-3xl" />
+      <div className="pointer-events-none fixed -bottom-32 -right-32 h-96 w-96 rounded-full bg-gradient-to-tl from-blue-500/10 to-purple-500/10 blur-3xl" />
+
+      <main className="relative mx-auto max-w-6xl px-6 py-12 z-10">
+        <section className="mb-12 text-center">
+      
+
+          <h1 className="mb-4 text-4xl font-semibold text-slate-900 dark:text-white">
+            Map your file columns
+          </h1>
+
+          <p className="mx-auto max-w-2xl text-slate-600 dark:text-slate-400">
+            Connect your payout and ledger columns to standard transaction fields for accurate reconciliation.
+          </p>
+        </section>
+
+        <div className="mb-8 flex justify-end">
+          <Button
+            onClick={handleAutoDetect}
+            variant="outline"
+            className="rounded-xl border-slate-300 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-400"
+            data-testid="button-auto-detect"
+          >
             <Sparkles className="mr-2 h-4 w-4" />
-            Auto-Detect
+            Auto-Detect Columns
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="mb-10 grid gap-8 lg:grid-cols-2">
           <MappingCard
             title="Payouts Mapping"
             columns={payout_columns}
@@ -282,17 +318,138 @@ export default function MappingPage() {
           />
         </div>
 
+        {/* Instructions */}
+        <div className="mx-auto mb-12 max-w-3xl rounded-xl border border-slate-200 bg-slate-50 p-6 dark:border-gray-800 dark:bg-slate-800/60">
+          <div className="flex gap-3">
+            <Info className="mt-1 h-5 w-5 text-blue-500" />
+            <div className="text-sm text-slate-600 dark:text-slate-400">
+              <p className="font-medium text-slate-900 dark:text-white mb-1">
+                Tips for successful mapping
+              </p>
+              <ul className="space-y-2 mt-2">
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                  <span><strong>Amount</strong> is required for both files</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                  <span><strong>Transaction ID</strong> helps with exact matching</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                  <span><strong>Timestamp</strong> improves fuzzy matching accuracy</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                  <span>Use <strong>Auto-Detect</strong> for quick mapping suggestions</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
         <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={() => router.push("/")} data-testid="button-back">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
+          <Button
+            variant="outline"
+            onClick={() => router.push("/")}
+            className="rounded-xl border-slate-300 dark:border-gray-700 px-6 py-3 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/5"
+            data-testid="button-back"
+          >
+            <ArrowLeft className="mr-3 h-5 w-5" />
+            Back to Upload
           </Button>
-          <Button onClick={handleStartProcessing} disabled={isStarting} data-testid="button-start">
+          <Button
+            onClick={handleStartProcessing}
+            disabled={isStarting}
+            className="rounded-xl text-md bg-blue-500 px-6 py-3 font-medium text-white transition hover:bg-blue-600"
+            data-testid="button-start"
+          >
             {isStarting ? "Starting..." : "Start Processing"}
-            <ArrowRight className="ml-2 h-4 w-4" />
+            <ArrowRight className="ml-3 h-5 w-5" />
           </Button>
         </div>
-      </div>
+      </main>
+
+      {/* Global styles for custom scrollbars */}
+      <style jsx global>{`
+        /* Custom scrollbar styles for the entire app */
+        * {
+          scrollbar-width: thin;
+          scrollbar-color: #cbd5e1 transparent;
+        }
+
+        *::-webkit-scrollbar {
+          width: 6px;
+          height: 6px;
+        }
+
+        *::-webkit-scrollbar-track {
+          background: transparent;
+          border-radius: 3px;
+        }
+
+        *::-webkit-scrollbar-thumb {
+          background-color: #cbd5e1;
+          border-radius: 3px;
+        }
+
+        *::-webkit-scrollbar-thumb:hover {
+          background-color: #94a3b8;
+        }
+
+        /* Dark mode scrollbars */
+        .dark * {
+          scrollbar-color: #475569 transparent;
+        }
+
+        .dark *::-webkit-scrollbar-thumb {
+          background-color: #475569;
+        }
+
+        .dark *::-webkit-scrollbar-thumb:hover {
+          background-color: #64748b;
+        }
+
+        /* Specific styles for table containers */
+        [class*="overflow-auto"]::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+
+        [class*="overflow-auto"]::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 4px;
+          margin: 2px;
+        }
+
+        [class*="overflow-auto"]::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 4px;
+          border: 2px solid #f1f5f9;
+        }
+
+        [class*="overflow-auto"]::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+
+        .dark [class*="overflow-auto"]::-webkit-scrollbar-track {
+          background: #1e293b;
+        }
+
+        .dark [class*="overflow-auto"]::-webkit-scrollbar-thumb {
+          background: #475569;
+          border: 2px solid #1e293b;
+        }
+
+        .dark [class*="overflow-auto"]::-webkit-scrollbar-thumb:hover {
+          background: #64748b;
+        }
+
+        /* Prevent horizontal scroll on body */
+        body {
+          overflow-x: hidden;
+        }
+      `}</style>
     </div>
   );
 }

@@ -347,14 +347,15 @@ async function processJobInBackground(
     debugLog(`PROCESS-${processId}`, 'Storing clusters in database...')
     const clusterPromises = clusters.map((cluster: any) =>
       storage.createCluster({
-        job_id: jobId,
-        pivot_id: cluster.pivot_id,
-        pivot_type: cluster.pivot_type,
-        records: cluster.records,
-        amount: cluster.amount,
-        status: cluster.status,
-        notes: cluster.notes,
-        created_at: new Date().toISOString(),
+          job_id: jobId,
+          pivot_id: cluster.pivot_id,
+          pivot_type: cluster.pivot_type,
+          records: cluster.records,
+          amount: cluster.amount,
+          status: cluster.status,
+          notes: cluster.notes,
+          created_at: new Date().toISOString(),
+        
       })
     )
 

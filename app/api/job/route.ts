@@ -144,14 +144,14 @@ async function processJob(
     
     // FIXED: Transform buildClusters result to InsertCluster format
     const clusterRecords: InsertCluster[] = buildClustersResult.map((c: any) => ({
-      job_id, // FIXED: Added required job_id
+      job_id, 
       pivot_id: c.pivot_id || '',
       pivot_type: c.pivot_type || 'payout',
       records: c.records || [],
       amount: c.amount || 0,
       status: c.status || 'unmatched',
       notes: c.notes || '',
-      // Add optional properties with defaults
+      pattern_type: c.pattern_type || 'unknown',
       evidence_ids: [],
       merchant_name: '',
       amount_bucket: '',

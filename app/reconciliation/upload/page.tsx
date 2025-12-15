@@ -2,13 +2,19 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, FileSpreadsheet, ArrowRight, Check, AlertCircle } from "lucide-react";
+import {
+  FileSpreadsheet,
+  ArrowRight,
+  Check,
+  Zap,
+  FileCheck,
+  Info,
+  Loader2
+} from "lucide-react";
 import { Button } from "@/src/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Progress } from "@/src/components/ui/progress";
 import { useToast } from "@/src/hooks/use-toast";
 import { useAppStore } from "@/src/lib/store";
-import { apiRequest } from "@/src/lib/queryClient";
 import type { UploadResponse } from "@/@types";
 
 interface FileDropZoneProps {
@@ -20,83 +26,94 @@ interface FileDropZoneProps {
   testId: string;
 }
 
-function FileDropZone({ label, description, file, onFileDrop, accept, testId }: FileDropZoneProps) {
+function FileDropZone({
+  label,
+  description,
+  file,
+  onFileDrop,
+  accept,
+  testId
+}: FileDropZoneProps) {
   const [isDragging, setIsDragging] = useState(false);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  }, []);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       setIsDragging(false);
       const droppedFile = e.dataTransfer.files[0];
-      if (droppedFile) {
-        onFileDrop(droppedFile);
-      }
-    },
-    [onFileDrop]
-  );
-
-  const handleFileInput = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const selectedFile = e.target.files?.[0];
-      if (selectedFile) {
-        onFileDrop(selectedFile);
-      }
+      if (droppedFile) onFileDrop(droppedFile);
     },
     [onFileDrop]
   );
 
   return (
-    <Card
-      className={`relative transition-colors cursor-pointer ${
-        isDragging ? "border-primary border-2 bg-primary/5" : file ? "border-chart-2" : ""
+    <div
+      className={`relative min-h-[280px] cursor-pointer rounded-2xl border-2 p-8 text-center transition-all flex flex-col items-center justify-center ${
+        isDragging
+          ? "border-blue-400 bg-blue-50/50 dark:bg-blue-900/20"
+          : file
+          ? "border-blue-400 bg-blue-50/30 dark:bg-blue-900/10"
+          : "border-slate-200 bg-white hover:border-blue-400 hover:shadow-lg hover:shadow-blue-500/5 dark:border-gray-800 dark:bg-slate-800/60"
       }`}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setIsDragging(true);
+      }}
+      onDragLeave={() => setIsDragging(false)}
       onDrop={handleDrop}
       data-testid={testId}
     >
       <input
         type="file"
         accept={accept}
-        onChange={handleFileInput}
-        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-        data-testid={`${testId}-input`}
+        onChange={(e) => e.target.files && onFileDrop(e.target.files[0])}
+        className="absolute inset-0 opacity-0 cursor-pointer"
       />
-      <CardContent className="flex flex-col items-center justify-center p-8 text-center min-h-[200px]">
-        {file ? (
-          <>
-            <div className="w-12 h-12 rounded-full bg-chart-2/10 flex items-center justify-center mb-4">
-              <Check className="w-6 h-6 text-chart-2" />
-            </div>
-            <p className="font-medium text-sm">{file.name}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {(file.size / 1024).toFixed(1)} KB
-            </p>
-          </>
-        ) : (
-          <>
-            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
-              <FileSpreadsheet className="w-6 h-6 text-muted-foreground" />
-            </div>
-            <p className="font-medium text-sm">{label}</p>
-            <p className="text-xs text-muted-foreground mt-1">{description}</p>
-            <p className="text-xs text-muted-foreground mt-3">
-              Drag and drop or click to browse
-            </p>
-          </>
-        )}
-      </CardContent>
-    </Card>
+
+      {file ? (
+        <>
+          <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30">
+            <Check className="h-8 w-8 text-blue-600 dark:text-blue-300" />
+          </div>
+          <p className="text-lg font-medium text-slate-900 dark:text-white">
+            {file.name}
+          </p>
+          <p className="text-sm text-slate-500">
+            {(file.size / 1024 / 1024).toFixed(2)} MB
+          </p>
+        </>
+      ) : (
+        <>
+          <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-gray-700">
+            <FileSpreadsheet className="h-8 w-8 text-slate-400" />
+          </div>
+          <h3 className="mb-2 text-xl font-semibold text-slate-900 dark:text-white">
+            {label}
+          </h3>
+          <p className="mb-3 text-slate-600 dark:text-slate-400">
+            {description}
+          </p>
+          <div className="text-sm text-slate-500">
+            Drag & drop or click to browse
+            <br />
+            <div className="text-left mt-4">
+            File Requirements
+       
+              <ul className="space-y-1">
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                  CSV (.csv)
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                  Excel (.xlsx, .xls)
+                </li>
+              </ul>
+          </div>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -115,6 +132,12 @@ export default function UploadPage() {
   const [ledgerFile, setLedgerFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStatus, setUploadStatus] = useState<string>("");
+
+  const simulateProgress = (targetProgress: number, status: string) => {
+    setUploadProgress(targetProgress);
+    setUploadStatus(status);
+  };
 
   const handleUpload = async () => {
     if (!payoutFile || !ledgerFile) {
@@ -127,36 +150,38 @@ export default function UploadPage() {
     }
 
     setIsUploading(true);
-    setUploadProgress(10);
+    simulateProgress(10, "Preparing files...");
 
     try {
       const formData = new FormData();
       formData.append("payoutFile", payoutFile);
       formData.append("ledgerFile", ledgerFile);
-      formData.append("jobName", `Reconciliation ${new Date().toLocaleDateString()}`);
 
-      setUploadProgress(30);
+      simulateProgress(25, "Uploading to server...");
 
       const response = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       });
 
-      if (!response.ok) {
-        throw new Error(await response.text());
-      }
+      if (!response.ok) throw new Error(await response.text());
 
-      setUploadProgress(80);
+      simulateProgress(60, "Processing data...");
 
       const data: UploadResponse = await response.json();
-      
+
+      simulateProgress(85, "Analyzing file structure...");
+
       setCurrentJobId(data.job_id);
       setPayoutColumns(data.payout_columns || []);
       setLedgerColumns(data.ledger_columns || []);
       setPayoutPreview(data.payout_preview || []);
       setLedgerPreview(data.ledger_preview || []);
 
-      setUploadProgress(100);
+      simulateProgress(100, "Almost done...");
+
+      // Small delay to show 100% completion
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       toast({
         title: "Files uploaded successfully",
@@ -164,119 +189,138 @@ export default function UploadPage() {
       });
 
       router.push("/reconciliation/mapping");
-    } catch (error) {
+    } catch (e) {
       toast({
         title: "Upload failed",
-        description: error instanceof Error ? error.message : "An error occurred",
+        description: e instanceof Error ? e.message : "Unexpected error",
         variant: "destructive",
       });
+      setUploadStatus("Upload failed");
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
+      setUploadStatus("");
     }
   };
 
-  const canUpload = payoutFile && ledgerFile && !isUploading;
-
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto px-6 py-12">
-        <div className="text-center mb-10">
-          <h1 className="text-2xl font-semibold mb-2">Reconciliation Assistant</h1>
-          <p className="text-muted-foreground">
-            Upload your payout and ledger files to begin the reconciliation process
-          </p>
-        </div>
+    <div className="relative min-h-screen bg-white dark:bg-gray-900">
+      {/* subtle gradient accents */}
+      <div className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full bg-gradient-to-br from-blue-500/10 to-indigo-500/10 blur-3xl" />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <main className="mx-auto max-w-6xl px-6 py-12">
+        <section className="mb-12 text-center">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-200">
+            <FileCheck className="h-4 w-4" />
+            Reconciliation setup
+          </div>
+
+          <h1 className="mb-4 text-4xl font-semibold text-slate-900 dark:text-white">
+            Upload your payout and ledger files
+          </h1>
+
+          <p className="mx-auto max-w-2xl text-slate-600 dark:text-slate-400">
+            These files are used to detect matches, surface discrepancies,
+            and prepare reconciliation summaries.
+          </p>
+        </section>
+
+        <div className="mb-10 grid gap-8 lg:grid-cols-2">
           <FileDropZone
             label="Payouts File"
-            description="CSV or XLSX from your payment provider"
+            description="Export from payment provider"
             file={payoutFile}
             onFileDrop={setPayoutFile}
-            accept=".csv,.xlsx,.xls"
-            testId="dropzone-payout"
+            accept=".csv,.xlsx"
+            testId="payout-drop"
           />
           <FileDropZone
             label="Ledger File"
-            description="CSV or XLSX from your accounting system"
+            description="Export from accounting system"
             file={ledgerFile}
             onFileDrop={setLedgerFile}
-            accept=".csv,.xlsx,.xls"
-            testId="dropzone-ledger"
+            accept=".csv,.xlsx"
+            testId="ledger-drop"
           />
         </div>
 
         {isUploading && (
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-muted-foreground">Uploading files...</span>
-              <span className="text-sm font-mono">{uploadProgress}%</span>
+          <div className="mx-auto mb-8 max-w-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                    {uploadStatus}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  {uploadProgress < 20 && "Getting started..."}
+                  {uploadProgress >= 20 && uploadProgress < 40 && "Uploading..."}
+                  {uploadProgress >= 40 && uploadProgress < 70 && "Processing..."}
+                  {uploadProgress >= 70 && uploadProgress < 90 && "Analyzing..."}
+                  {uploadProgress >= 90 && uploadProgress < 100 && "Almost done..."}
+                  {uploadProgress === 100 && "Complete!"}
+                </span>
+                <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
+                  {uploadProgress}%
+                </span>
+              </div>
             </div>
-            <Progress value={uploadProgress} className="h-2" />
+            <Progress 
+              value={uploadProgress} 
+              indicatorColor="blue" 
+              className="h-2"
+            />
+            {uploadProgress === 100 && (
+              <p className="mt-3 text-center text-sm text-green-600 dark:text-green-400">
+                ✓ Ready to proceed with column mapping
+              </p>
+            )}
           </div>
         )}
+
+        {/* Instructions */}
+        <div className="mx-auto mb-12 max-w-3xl rounded-xl border border-slate-200 bg-slate-50 p-6 dark:border-gray-800 dark:bg-slate-800/60">
+          <div className="flex gap-3">
+            <Info className="mt-1 h-5 w-5 text-blue-500" />
+            <div className="text-sm text-slate-600 dark:text-slate-400">
+              <p className="font-medium text-slate-900 dark:text-white mb-1">
+                What happens next
+              </p>
+              <p>
+                After upload, you'll map columns between files. No data is modified.
+                All processing happens on exported data only.
+              </p>
+            </div>
+          </div>
+        </div>
 
         <div className="flex justify-center">
           <Button
             size="lg"
             onClick={handleUpload}
-            disabled={!canUpload}
-            data-testid="button-upload"
+            disabled={!payoutFile || !ledgerFile || isUploading}
+            className="rounded-xl text-md bg-blue-500 px-6 py-3 font-medium text-white transition hover:from-blue-600 hover:to-indigo-600"
           >
             {isUploading ? (
-              "Uploading..."
+              <>
+                <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                Uploading...
+              </>
             ) : (
               <>
                 Continue to Mapping
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-3 h-5 w-5" />
               </>
             )}
           </Button>
         </div>
 
-        <Card className="mt-12">
-          <CardHeader>
-            <CardTitle className="text-lg">How it works</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Step number={1} title="Upload" description="Upload your payout and ledger files" active />
-              <Step number={2} title="Map" description="Map columns to standard fields" />
-              <Step number={3} title="Match" description="Automatic matching with AI assistance" />
-              <Step number={4} title="Export" description="Download PDF report and CSV" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-function Step({
-  number,
-  title,
-  description,
-  active = false,
-}: {
-  number: number;
-  title: string;
-  description: string;
-  active?: boolean;
-}) {
-  return (
-    <div className="text-center">
-      <div
-        className={`w-8 h-8 rounded-full mx-auto mb-3 flex items-center justify-center text-sm font-medium ${
-          active
-            ? "bg-primary text-primary-foreground"
-            : "bg-muted text-muted-foreground"
-        }`}
-      >
-        {number}
-      </div>
-      <h3 className="font-medium text-sm mb-1">{title}</h3>
-      <p className="text-xs text-muted-foreground">{description}</p>
+     
+      </main>
     </div>
   );
 }

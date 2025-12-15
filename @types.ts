@@ -67,6 +67,7 @@ export interface MatchRecord {
 }
 
 export interface Cluster {
+  pattern_type: string;
   id: string;
   job_id: string;
   pivot_id: string;
@@ -87,6 +88,24 @@ export interface Cluster {
   token_usage?: number;
   llm_confidence?: string;
   created_at?: string;
+}
+
+// ============ PAGINATION TYPES ============
+
+export interface PaginationInfo {
+  page: number;
+  limit: number;
+  total: number;
+  pages: number;
+}
+
+export interface TransactionsPaginationInfo {
+  page: number;
+  limit: number;
+  total_payouts: number;
+  total_ledger: number;
+  pages_payouts: number;
+  pages_ledger: number;
 }
 
 // ============ SETTINGS & MAPPING TYPES ============
@@ -151,6 +170,11 @@ export interface JobResultsResponse {
   unmatched_payouts: TransactionRecord[];
   unmatched_ledger: TransactionRecord[];
   clusters: Cluster[];
+  pagination: {
+    matches: PaginationInfo;
+    transactions: TransactionsPaginationInfo;
+    clusters: PaginationInfo;
+  };
 }
 
 export interface UploadResponse {
@@ -238,17 +262,50 @@ export interface IStorage {
     job_id: string,
     source: "payout" | "ledger"
   ): Promise<TransactionRecord[]>;
+  
+  // Paginated transaction methods
   getUnmatchedTransactions(
     job_id: string,
     source: "payout" | "ledger",
     matched_ids: string[]
   ): Promise<TransactionRecord[]>;
+  
+  getUnmatchedTransactionsPaginated(
+    job_id: string,
+    source: "payout" | "ledger",
+    matched_ids: string[],
+    limit?: number,
+    offset?: number,
+    searchQuery?: string
+  ): Promise<TransactionRecord[]>;
+  
+  getUnmatchedTransactionsCount(
+    job_id: string,
+    source: "payout" | "ledger",
+    matched_ids: string[],
+    searchQuery?: string
+  ): Promise<number>;
+  
   getTransactionById(id: string): Promise<TransactionRecord | undefined>;
 
   // Match Records
   createMatchRecord(record: InsertMatchRecord): Promise<MatchRecord>;
   createMatchRecords(records: InsertMatchRecord[]): Promise<MatchRecord[]>;
   getMatchesByJob(job_id: string): Promise<MatchRecord[]>;
+  
+  // Paginated match methods
+  getMatchesByJobPaginated(
+    job_id: string,
+    limit?: number,
+    offset?: number,
+    searchQuery?: string
+  ): Promise<MatchRecord[]>;
+  
+  getMatchesCount(
+    job_id: string,
+    searchQuery?: string
+  ): Promise<number>;
+  
   getMatchById(id: string): Promise<MatchRecord | undefined>;
   updateMatch(
     id: string,
@@ -265,11 +322,30 @@ export interface IStorage {
   ): Promise<
     (MatchRecord & { payout: TransactionRecord; ledger: TransactionRecord })[]
   >;
+  
+  getMatchesWithTransactionsPaginated(
+    job_id: string,
+    limit?: number,
+    offset?: number,
+    searchQuery?: string
+  ): Promise<
+    (MatchRecord & { payout: TransactionRecord; ledger: TransactionRecord })[]
+  >;
 
   // Clusters
   createCluster(cluster: InsertCluster): Promise<Cluster>;
   createClusters(clusterData: InsertCluster[]): Promise<Cluster[]>;
   getClustersByJob(job_id: string): Promise<Cluster[]>;
+  
+  // Paginated cluster methods
+  getClustersByJobPaginated(
+    job_id: string,
+    limit?: number,
+    offset?: number
+  ): Promise<Cluster[]>;
+  
+  getClustersCount(job_id: string): Promise<number>;
+  
   getClusterById(id: string): Promise<Cluster | undefined>;
   updateCluster(
     id: string,
