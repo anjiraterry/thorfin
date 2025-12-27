@@ -2,21 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, CheckCircle, XCircle, ArrowRight, Zap, Info } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, ArrowRight, Zap, Info, RefreshCw } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Progress } from "@/src/components/ui/progress";
 import { useAppStore } from "@/src/lib/store";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { JobStatusResponse } from "@/@types";
 
 const POLL_INTERVAL = 1000;
 
 export default function ProcessingPage() {
   const router = useRouter();
-  const { current_job_id } = useAppStore();
+  const queryClient = useQueryClient();
+  const { current_job_id, resetJob } = useAppStore();
+  const [isRetrying, setIsRetrying] = useState(false);
 
-  const { data: status, error } = useQuery<JobStatusResponse>({
+  const { data: status, error, refetch } = useQuery<JobStatusResponse>({
     queryKey: ["job-status", current_job_id],
     queryFn: async () => {
       if (!current_job_id) throw new Error("No job ID");
@@ -38,6 +40,36 @@ export default function ProcessingPage() {
       return POLL_INTERVAL;
     },
   });
+
+  const handleRetry = async () => {
+    if (!current_job_id) return;
+    
+    setIsRetrying(true);
+    
+    try {
+      // Reset the query data to trigger a refetch and restart polling
+      queryClient.setQueryData(["job-status", current_job_id], {
+        ...status,
+        status: "processing",
+        progress: 0,
+        match_rate: 0,
+        error_message: undefined
+      });
+      
+      // Force a refetch
+      await refetch();
+      
+    } catch (error) {
+      console.error("Error retrying job:", error);
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
+  const handleBackToHome = () => {
+    resetJob();
+    router.push("/");
+  };
 
   useEffect(() => {
     if (!current_job_id) {
@@ -70,8 +102,6 @@ export default function ProcessingPage() {
 
       <main className="relative mx-auto max-w-6xl px-6 py-12 z-10">
         <section className="mb-12 text-center">
-        
-
           <h1 className="mb-4 text-4xl font-semibold text-slate-900 dark:text-white">
             {isCompleted
               ? "Processing Complete"
@@ -170,14 +200,34 @@ export default function ProcessingPage() {
                   </Button>
                 )}
                 {isFailed && (
-                  <Button 
-                    variant="outline"
-                    onClick={() => router.push("/")} 
-                    className="rounded-xl border-slate-300 dark:border-gray-700 px-6 py-3 hover:border-blue-400"
-                    data-testid="button-try-again"
-                  >
-                    Try Again
-                  </Button>
+                  <>
+                    <Button 
+                      onClick={handleRetry} 
+                      className="rounded-xl bg-blue-500 px-6 py-3 font-medium text-white transition hover:bg-blue-600"
+                      disabled={isRetrying}
+                      data-testid="button-try-again"
+                    >
+                      {isRetrying ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Retrying...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          Try Again
+                        </>
+                      )}
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={handleBackToHome} 
+                      className="rounded-xl border-slate-300 dark:border-gray-700 px-6 py-3 hover:border-blue-400"
+                      data-testid="button-back-home"
+                    >
+                      Back to Home
+                    </Button>
+                  </>
                 )}
               </div>
 

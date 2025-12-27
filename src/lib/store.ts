@@ -5,13 +5,13 @@ import type {
   MatchRecord, 
   Cluster,
   ColumnMapping,
-  JobSettings,
-  defaultSettings
+  JobSettings
 } from "@/@types";
 
 interface AppState {
   current_job_id: string | null;
   setCurrentJobId: (id: string | null) => void;
+  resetJob: () => void; // This was missing in the implementation
 
   selected_transaction_id: string | null;
   setSelectedTransactionId: (id: string | null) => void;
@@ -61,7 +61,7 @@ const initialSettings: JobSettings = {
 };
 
 export const useAppStore = create<AppState>((set) => ({
-  // State properties (snake_case)
+  
   current_job_id: null,
   selected_transaction_id: null,
   selected_match_id: null,
@@ -78,6 +78,21 @@ export const useAppStore = create<AppState>((set) => ({
 
   // Actions (camelCase for React convention)
   setCurrentJobId: (id) => set({ current_job_id: id }),
+  resetJob: () => set({ 
+    current_job_id: null,
+    selected_transaction_id: null,
+    selected_match_id: null,
+    selected_cluster_id: null,
+    active_tab: "transactions",
+    view_mode: "split",
+    payout_columns: [],
+    ledger_columns: [],
+    payout_mapping: null,
+    ledger_mapping: null,
+    payout_preview: [],
+    ledger_preview: [],
+    settings: initialSettings,
+  }),
   setSelectedTransactionId: (id) => set({ selected_transaction_id: id }),
   setSelectedMatchId: (id) => set({ selected_match_id: id }),
   setSelectedClusterId: (id) => set({ selected_cluster_id: id }),
@@ -130,4 +145,7 @@ export const appSelectors = {
   ledgerMapping: (state: AppState) => state.ledger_mapping,
   payoutPreview: (state: AppState) => state.payout_preview,
   ledgerPreview: (state: AppState) => state.ledger_preview,
+  
+  // Also include selectors for actions if needed
+  resetJob: (state: AppState) => state.resetJob,
 };

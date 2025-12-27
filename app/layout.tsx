@@ -35,10 +35,6 @@ export default function RootLayout({
       >
         <QueryProvider>
           <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem
-            disableTransitionOnChange
           >
             <TooltipProvider>
               <Header />

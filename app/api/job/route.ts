@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { storage } from '@/lib/storage/supabase-storage'
 import type { StartJobRequest, JobSettings, InsertMatchRecord, InsertCluster } from '@/@types'
 import { normalizeTransactions } from '@/lib/file-parser'
-import { runMatchingEngine, buildClusters } from '@/lib/matching-engine'
+import { performReconciliation } from '@/lib/matching-engine' // CHANGED: Import new function
 
-// Use a Map for in-memory storage (consider Redis for production)
 const processingJobs = new Map<string, any>()
 
 export async function POST(request: NextRequest) {
@@ -111,8 +110,19 @@ async function processJob(
     const storedLedger = await storage.createTransactionRecords(ledgerRecords)
     processingJobs.set(job_id, { ...jobData, status: "processing", progress: 50 })
 
-    // Run matching engine
-    const matchResults = runMatchingEngine(storedPayouts, storedLedger, settings)
+    // CHANGED: Use performReconciliation instead of separate functions
+    const reconciliationResult = performReconciliation(storedPayouts, storedLedger, settings)
+    
+    // Extract results from reconciliation
+    const matchResults = reconciliationResult.matches
+    const clusters = reconciliationResult.clusters
+    const unmatchedPayouts = reconciliationResult.unmatched_payouts
+    const unmatchedLedger = reconciliationResult.unmatched_ledger
+    const total_unmatched_amount_cents = reconciliationResult.total_unmatched_amount_cents // CORRECT VALUE!
+    const matched_count = reconciliationResult.matched_count
+    const unmatched_count = reconciliationResult.unmatched_count
+    const match_rate = reconciliationResult.match_rate
+
     processingJobs.set(job_id, { ...jobData, status: "processing", progress: 70 })
 
     // Store matches - FIXED: Added missing 'status' property
@@ -132,18 +142,8 @@ async function processJob(
     await storage.createMatchRecords(matchRecords)
     processingJobs.set(job_id, { ...jobData, status: "processing", progress: 80 })
 
-    // Build clusters for unmatched transactions
-    const matchedPayoutIds = new Set(matchResults.map(r => r.payout_id))
-    const matchedLedgerIds = new Set(matchResults.map(r => r.ledger_id))
-    
-    const unmatchedPayouts = storedPayouts.filter(p => !matchedPayoutIds.has(p.id))
-    const unmatchedLedger = storedLedger.filter(l => !matchedLedgerIds.has(l.id))
-    const allUnmatched = [...unmatchedPayouts, ...unmatchedLedger]
-
-    const buildClustersResult = buildClusters(allUnmatched)
-    
     // FIXED: Transform buildClusters result to InsertCluster format
-    const clusterRecords: InsertCluster[] = buildClustersResult.map((c: any) => ({
+    const clusterRecords: InsertCluster[] = clusters.map((c: any) => ({
       job_id, 
       pivot_id: c.pivot_id || '',
       pivot_type: c.pivot_type || 'payout',
@@ -168,20 +168,27 @@ async function processJob(
     await storage.createClusters(clusterRecords)
     processingJobs.set(job_id, { ...jobData, status: "processing", progress: 90 })
 
-    // Calculate stats
-    const match_rate = storedPayouts.length > 0 
-      ? matchResults.length / storedPayouts.length 
-      : 0
+    // CHANGED: Calculate stats using reconciliation results
+    const allUnmatched = [...unmatchedPayouts, ...unmatchedLedger]
     
-    const total_unmatched_amount = allUnmatched.reduce((sum, tx) => sum + tx.amount_cents, 0)
+    // DEBUG: Log the difference between old and new calculation
+    const old_total_unmatched_amount = allUnmatched.reduce((sum, tx) => sum + tx.amount_cents, 0)
+    console.log('=== RECONCILIATION DEBUG ===');
+    console.log('Old total unmatched (incorrect):', old_total_unmatched_amount);
+    console.log('New total unmatched (correct):', total_unmatched_amount_cents);
+    console.log('Difference:', total_unmatched_amount_cents - old_total_unmatched_amount);
+    console.log('Match rate:', match_rate);
+    console.log('Matches:', matched_count);
+    console.log('Unmatched:', unmatched_count);
+    console.log('============================');
 
-    // Update job as completed
+    // Update job as completed - USING CORRECT total_unmatched_amount_cents
     await storage.updateJob(job_id, {
       status: "completed",
-      matched_count: matchResults.length,
-      unmatched_count: allUnmatched.length,
-      match_rate,
-      total_unmatched_amount_cents: total_unmatched_amount,
+      matched_count: matched_count,
+      unmatched_count: unmatched_count,
+      match_rate: match_rate,
+      total_unmatched_amount_cents: total_unmatched_amount_cents, // This is now CORRECT!
       progress: 100,
       updated_at: new Date().toISOString(),
     })

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Download,
@@ -42,11 +42,21 @@ import { queryClient, apiRequest } from "@/src/lib/queryClient";
 import { ClusterView } from "@/src/components/cluster-view";
 import type { JobResultsResponse, TransactionRecord, MatchRecord, ScoreBreakdown } from "@/@types";
 
-function formatCents(cents: number): string {
-  return (cents / 100).toLocaleString("en-US", {
+function formatCents(cents: number, currency: string = "NGN"): string {
+  
+  if (cents == null || isNaN(cents)) {
+    cents = 0;
+  }
+  
+  // Convert cents to currency format
+  const amount = (cents / 100).toLocaleString("en-NG", {
     style: "currency",
-    currency: "USD",
+    currency: currency,
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   });
+  
+  return amount;
 }
 
 function ConfidenceBadge({ level }: { level: string }) {
@@ -92,19 +102,55 @@ interface KPICardProps {
 }
 
 function KPICard({ label, value, subtext, icon }: KPICardProps) {
+  // Check if value is truncated
+  const [isTruncated, setIsTruncated] = useState(false);
+  const textRef = useRef<HTMLParagraphElement>(null);
+  
+  useEffect(() => {
+    if (textRef.current) {
+      // Check if text is actually truncated
+      const isOverflowing = textRef.current.scrollWidth > textRef.current.clientWidth;
+      setIsTruncated(isOverflowing);
+    }
+  }, [value]);
+
   return (
     <Card className="border-2 border-slate-200 bg-white dark:border-gray-800 dark:bg-slate-800/60 rounded-2xl">
       <CardContent className="p-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">{label}</p>
-            <p className="text-2xl font-bold font-mono text-slate-900 dark:text-white">
-              {value}
-            </p>
-            {subtext && <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{subtext}</p>}
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-slate-600 dark:text-slate-400 mb-1 truncate">{label}</p>
+            
+            {/* Tooltip on hover for truncated text */}
+            <div className="relative group">
+              <p 
+                ref={textRef}
+                className="text-2xl font-bold font-mono text-slate-900 dark:text-white truncate"
+              >
+                {value}
+              </p>
+              
+              {/* Tooltip that shows on hover */}
+              {isTruncated && (
+                <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block z-10">
+                  <div className="bg-gray-900 text-white text-sm py-2 px-3 rounded-lg shadow-lg whitespace-nowrap">
+                    {value}
+                    {/* Tooltip arrow */}
+                    <div className="absolute top-full left-4 -mt-1 border-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {subtext && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 truncate">
+                {subtext}
+              </p>
+            )}
           </div>
+          
           {icon && (
-            <div className="p-2 rounded-lg bg-slate-100 dark:bg-gray-700">
+            <div className="p-2 rounded-lg bg-slate-100 dark:bg-gray-700 flex-shrink-0">
               {icon}
             </div>
           )}
@@ -236,7 +282,7 @@ function TransactionDetails({ tx, title }: { tx: TransactionRecord; title: strin
           <div className="flex justify-between items-center">
             <span className="text-xs text-slate-500 dark:text-slate-400">Amount</span>
             <span className="font-mono text-sm font-bold text-slate-900 dark:text-white">
-              {formatCents(tx.amount_cents)}
+              {formatCents(tx.amount_cents, tx.currency)}
             </span>
           </div>
           <div className="flex justify-between items-center">
@@ -263,6 +309,64 @@ function TransactionDetails({ tx, title }: { tx: TransactionRecord; title: strin
   );
 }
 
+function StatusBadge({ status, type }: { status?: string; type?: 'payout' | 'ledger' }) {
+  // Status colors for raw status from data
+  const statusColors: Record<string, string> = {
+    FAILED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 border-red-200 dark:border-red-800',
+    SUCCESS: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 border-green-200 dark:border-green-800',
+    REVERSED: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300 border-pink-200 dark:border-pink-800',
+    FEE: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+  };
+
+  // Source type colors
+  const typeColors: Record<string, string> = {
+    payout: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border-blue-200 dark:border-blue-800',
+    ledger: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
+  };
+
+  // Cluster status colors
+  const clusterStatusColors: Record<string, string> = {
+    failed: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300 border-red-200 dark:border-red-800',
+    reversed: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300 border-pink-200 dark:border-pink-800',
+    fee: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border-purple-200 dark:border-purple-800',
+    unmatched: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300 border-yellow-200 dark:border-yellow-800',
+    partial: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300 border-orange-200 dark:border-orange-800',
+    resolved: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300 border-green-200 dark:border-green-800',
+  };
+
+  // Priority: raw status, then cluster status, then type
+  if (status) {
+    const statusKey = status.toUpperCase();
+    if (statusColors[statusKey] || clusterStatusColors[status]) {
+      return (
+        <Badge 
+          variant="outline" 
+          className={`text-xs capitalize ${statusColors[statusKey] || clusterStatusColors[status] || 'bg-slate-100 text-slate-700'}`}
+        >
+          {status}
+        </Badge>
+      );
+    }
+  }
+
+  if (type) {
+    return (
+      <Badge 
+        variant="outline" 
+        className={`text-xs capitalize ${typeColors[type] || 'bg-slate-100 text-slate-700'}`}
+      >
+        {type}
+      </Badge>
+    );
+  }
+
+  return (
+    <Badge variant="outline" className="text-xs bg-slate-100 text-slate-700">
+      Unknown
+    </Badge>
+  );
+}
+
 interface MatchInspectorProps {
   match?: (MatchRecord & { payout: TransactionRecord; ledger: TransactionRecord }) | null;
   onAccept: () => void;
@@ -270,6 +374,7 @@ interface MatchInspectorProps {
   isAccepting: boolean;
   isRejecting: boolean;
 }
+
 
 function MatchInspector({ match, onAccept, onReject, isAccepting, isRejecting }: MatchInspectorProps) {
   if (!match) {
@@ -454,6 +559,8 @@ function MatchInspector({ match, onAccept, onReject, isAccepting, isRejecting }:
   );
 }
 
+
+
 export default function ResultsPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -627,7 +734,7 @@ export default function ResultsPage() {
             </div>
             <Button
               variant="outline"
-              onClick={() => router.push("/")}
+              onClick={() => router.push("/reconciliation/upload")}
               className="rounded-xl border-slate-300 dark:border-gray-700 px-4 py-2 hover:border-blue-400"
               data-testid="button-back-home"
             >
@@ -664,7 +771,7 @@ export default function ResultsPage() {
             />
             <KPICard
               label="Unmatched Amount"
-              value={formatCents(results.stats.total_unmatched_amount)}
+              value={formatCents(results.stats.total_unmatched_amount, results.stats.currency)}
               subtext="Total unmatched value"
               icon={<AlertCircle className="h-4 w-4 text-red-500" />}
             />
@@ -815,7 +922,7 @@ export default function ResultsPage() {
                                   {match.ledger?.tx_id || "-"}
                                 </TableCell>
                                 <TableCell className="text-right font-mono text-sm text-slate-900 dark:text-white">
-                                  {formatCents(match.payout?.amount_cents || 0)}
+                                  {formatCents(match.payout?.amount_cents || 0, match.payout?.currency || "NGN")}
                                 </TableCell>
                                 <TableCell className="text-center">
                                   <span className="font-mono text-sm font-bold text-slate-900 dark:text-white">
@@ -896,7 +1003,7 @@ export default function ResultsPage() {
                                 <TableRow key={tx.id} className="hover:bg-slate-50 dark:hover:bg-gray-700/30" data-testid={`row-unmatched-payout-${tx.id}`}>
                                   <TableCell className="font-mono text-xs text-slate-600 dark:text-slate-400">{tx.tx_id || "-"}</TableCell>
                                   <TableCell className="text-right font-mono text-slate-900 dark:text-white">
-                                    {formatCents(tx.amount_cents)}
+                                    {formatCents(tx.amount_cents, tx.currency)}
                                   </TableCell>
                                   <TableCell className="text-slate-600 dark:text-slate-400">{tx.merchant_id || "-"}</TableCell>
                                   <TableCell className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[200px]">
@@ -943,7 +1050,7 @@ export default function ResultsPage() {
                                 <TableRow key={tx.id} className="hover:bg-slate-50 dark:hover:bg-gray-700/30" data-testid={`row-unmatched-ledger-${tx.id}`}>
                                   <TableCell className="font-mono text-xs text-slate-600 dark:text-slate-400">{tx.tx_id || "-"}</TableCell>
                                   <TableCell className="text-right font-mono text-slate-900 dark:text-white">
-                                    {formatCents(tx.amount_cents)}
+                                    {formatCents(tx.amount_cents, tx.currency)}
                                   </TableCell>
                                   <TableCell className="text-slate-600 dark:text-slate-400">{tx.merchant_id || "-"}</TableCell>
                                   <TableCell className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[200px]">
@@ -966,27 +1073,145 @@ export default function ResultsPage() {
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="clusters" className="m-0 p-0">
-                    <div className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-medium text-slate-900 dark:text-white">
-                          Clusters ({clustersPagination.total})
-                        </h3>
-                        <LimitSelector
-                          value={clustersLimit}
-                          onChange={setClustersLimit}
-                          label="Show"
-                          options={[5, 10, 20, 50]}
-                        />
+               
+<TabsContent value="clusters" className="m-0 p-0">
+  <div className="p-6">
+    <div className="flex items-center justify-between mb-4">
+      <h3 className="font-medium text-slate-900 dark:text-white">
+        Clusters ({clustersPagination.total})
+      </h3>
+      <div className="flex items-center gap-4">
+        <div className="text-sm text-slate-600 dark:text-slate-400">
+          Showing {Math.min(clustersLimit, clustersPagination.total)} of {clustersPagination.total} clusters
+        </div>
+        <LimitSelector
+          value={clustersLimit}
+          onChange={setClustersLimit}
+          label="Show"
+          options={[5, 10, 20, 50]}
+        />
+      </div>
+    </div>
+    
+    {/* Cluster Display */}
+    {results.clusters && results.clusters.length > 0 ? (
+      <div className="space-y-4">
+        {results.clusters.map((cluster, index) => (
+          <Card key={cluster.id} className="border-2 border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl overflow-hidden">
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <StatusBadge status={cluster.status} />
+                    {cluster.pivot_type && (
+                      <Badge variant="outline" className="bg-slate-100 text-slate-700 dark:bg-gray-700 dark:text-slate-300">
+                        {cluster.pivot_type}
+                      </Badge>
+                    )}
+                  </div>
+                  <h4 className="font-medium text-slate-900 dark:text-white">
+                    Cluster {index + 1}
+                  </h4>
+                  {cluster.notes && (
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{cluster.notes}</p>
+                  )}
+                </div>
+                <div className="text-right">
+                  <p className="text-xl font-bold font-mono text-slate-900 dark:text-white">
+                    {formatCents(cluster.amount, cluster.records?.[0]?.currency || "NGN")}
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    {cluster.records?.length || 0} records
+                  </p>
+                </div>
+              </div>
+              
+              {cluster.records && cluster.records.length > 0 && (
+                <div className="border-t border-slate-100 dark:border-gray-700 pt-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      Records in Cluster
+                    </span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      Total: {cluster.records.length}
+                    </span>
+                  </div>
+                  
+                  <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
+                    {cluster.records.map((record, recordIndex) => (
+                      <div 
+                        key={record.id} 
+                        className="p-3 border border-slate-200 dark:border-gray-700 rounded-lg bg-slate-50 dark:bg-gray-700/30"
+                      >
+                        <div className="flex justify-between items-center mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
+                              {record.tx_id || `Record ${recordIndex + 1}`}
+                            </span>
+                            {/* Grey text with round dot for transaction type */}
+                            <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-slate-500"></span>
+                              {record.source}
+                            </div>
+                          </div>
+                          <span className="font-mono text-sm font-bold text-slate-900 dark:text-white">
+                            {formatCents(record.amount_cents, record.currency)}
+                          </span>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <span className="text-slate-500 dark:text-slate-400">Date:</span>
+                            <span className="ml-2 text-slate-700 dark:text-slate-300">
+                              {record.timestamp ? new Date(record.timestamp).toLocaleDateString() : '-'}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-slate-500 dark:text-slate-400">Reference:</span>
+                            <span className="ml-2 text-slate-700 dark:text-slate-300 truncate">
+                              {record.reference || '-'}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {record.raw?.status && (
+                          <div className="mt-2">
+                            <StatusBadge status={record.raw.status} />
+                          </div>
+                        )}
                       </div>
-                      <div className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                        Showing {Math.min(clustersLimit, clustersPagination.total)} of {clustersPagination.total} clusters
-                      </div>
-                      <div>
-                        <ClusterView clusters={results.clusters} jobId={current_job_id!} />
-                      </div>
-                    </div>
-                  </TabsContent>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {cluster.llm_summary && (
+                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Info className="h-4 w-4 text-blue-500" />
+                    <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
+                      AI Summary
+                    </span>
+                  </div>
+                  <p className="text-sm text-blue-600 dark:text-blue-400">
+                    {cluster.llm_summary}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    ) : (
+      <div className="text-center py-12 border-2 border-dashed border-slate-200 dark:border-gray-700 rounded-2xl">
+        <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-gray-700 flex items-center justify-center mx-auto mb-4">
+          <Info className="h-8 w-8 text-slate-400" />
+        </div>
+        <p className="text-slate-600 dark:text-slate-400">No clusters found</p>
+      </div>
+    )}
+  </div>
+</TabsContent>
                 </div>
 
               

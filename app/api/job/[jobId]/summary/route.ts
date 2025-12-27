@@ -1,5 +1,8 @@
+
+
 import { NextRequest, NextResponse } from 'next/server'
 import { storage } from '@/lib/storage/supabase-storage'
+import { getCorrectedTotalUnmatchedAmount } from '@/lib/matching-engine'
 import type { JobSummaryResponse } from '@/@types'
 
 export async function GET(
@@ -18,18 +21,63 @@ export async function GET(
     }
 
     const totalMatches = await storage.getMatchesCount(jobId)
-    const totalUnmatchedPayouts = await storage.getUnmatchedTransactionsCount(jobId, "payout", [])
-    const totalUnmatchedLedger = await storage.getUnmatchedTransactionsCount(jobId, "ledger", [])
+    
+    // Get total transaction counts
+    const totalPayoutsCount = await storage.getTransactionCount(jobId, "payout")
+    const totalLedgerCount = await storage.getTransactionCount(jobId, "ledger")
+    
+    // Calculate actual unmatched counts
+    const unmatchedPayoutsCount = Math.max(0, totalPayoutsCount - totalMatches)
+    const unmatchedLedgerCount = Math.max(0, totalLedgerCount - totalMatches)
+    
+    // Get matched IDs
+    const matchedPayoutIds = (await storage.getMatchesByJob(jobId)).map(m => m.payout_id).filter(Boolean)
+    const matchedLedgerIds = (await storage.getMatchesByJob(jobId)).map(m => m.ledger_id).filter(Boolean)
+    
+    // Get ALL unmatched transactions (not paginated)
+    const unmatchedPayouts = await storage.getUnmatchedTransactionsPaginated(
+      jobId, 
+      "payout", 
+      matchedPayoutIds, 
+      10000, // Very large limit to get all
+      0
+    )
+    
+    const unmatchedLedger = await storage.getUnmatchedTransactionsPaginated(
+      jobId, 
+      "ledger", 
+      matchedLedgerIds, 
+      10000, // Very large limit to get all
+      0
+    )
+    
+    // Get ALL clusters (not paginated)
+    const clusters = await storage.getClustersByJobPaginated(
+      jobId,
+      10000, // Very large limit to get all
+      0
+    )
+    
+    // *** FIX: Use the corrected calculation from matching engine ***
+    const totalUnmatchedAmount = getCorrectedTotalUnmatchedAmount(
+      unmatchedPayouts,
+      unmatchedLedger,
+      clusters
+    )
 
     const response: JobSummaryResponse = {
-      job,
+      job: {
+        ...job,
+        currency: job.currency || "NGN",
+      },
       stats: {
-        total_payouts: job.payout_row_count || 0,
-        total_ledger: job.ledger_row_count || 0,
+        total_payouts: totalPayoutsCount,
+        total_ledger: totalLedgerCount,
         matched_count: totalMatches,
-        unmatched_count: totalUnmatchedPayouts + totalUnmatchedLedger,
-        match_rate: job.match_rate || 0,
-        total_unmatched_amount: job.total_unmatched_amount_cents || 0,
+        unmatched_count: unmatchedPayoutsCount + unmatchedLedgerCount,
+        match_rate: totalPayoutsCount > 0 ? totalMatches / totalPayoutsCount : 0,
+        total_unmatched_amount: totalUnmatchedAmount, // *** CORRECTED ***
+        currency: job.currency || "NGN",
       }
     }
 

@@ -1,8 +1,9 @@
 // ============ CORE TYPES ============
 
 export interface Job {
+  currency: string;
   id: string;
-  name?: string;
+  name: string; // Changed from optional to required
   status: "pending" | "processing" | "completed" | "failed" | "uploaded";
   created_at: string;
   updated_at: string;
@@ -46,8 +47,12 @@ export interface TransactionRecord {
   reference?: string;
   metadata?: Record<string, unknown>;
   normalized_fields?: Record<string, unknown>;
-  raw: Record<string, unknown>;
+  raw: {
+    status?: string 
+    type?: string
+  }
   created_at?: string;
+
 }
 
 export interface MatchRecord {
@@ -64,10 +69,11 @@ export interface MatchRecord {
   notes?: string;
   matched_at: string;
   updated_at?: string;
+  created_at?: string; // Added for compatibility
 }
 
 export interface Cluster {
-  pattern_type: string;
+
   id: string;
   job_id: string;
   pivot_id: string;
@@ -75,7 +81,7 @@ export interface Cluster {
   records: TransactionRecord[];
   evidence_ids?: string[];
   amount: number;
-  status: "unmatched" | "partial" | "resolved";
+  status: "unmatched" | "partial" | "resolved" | "fee" | "failed" | "reversed";
   notes?: string;
   merchant_name?: string;
   amount_bucket?: string;
@@ -156,6 +162,7 @@ export const defaultSettings: JobSettings = {
 export interface JobResultsResponse {
   job: Job;
   stats: {
+    currency: string;
     total_payouts: number;
     total_ledger: number;
     matched_count: number;
@@ -184,6 +191,7 @@ export interface UploadResponse {
   ledger_columns?: string[];
   payout_preview?: Record<string, unknown>[];
   ledger_preview?: Record<string, unknown>[];
+  currency? : string
 }
 
 export interface StartJobRequest {
@@ -199,7 +207,6 @@ export interface JobStatusResponse {
   progress: number;
   match_rate?: number;
   error_message?: string;
-
   matched_count?: number;
   unmatched_count?: number;
   updated_at: string;
@@ -366,6 +373,42 @@ export interface ClusterData {
   amount: number;
   status: "unmatched" | "partial" | "resolved";
   notes?: string;
+  merchant_name : string
+}
+
+// ============ API RESPONSE TYPES ============
+
+export interface JobSummaryResponse {
+  job: {
+    id: string;
+    name: string;
+    status: 'pending' | 'processing' | 'completed' | 'failed' | 'uploaded';
+    created_at: string;
+    updated_at: string;
+    currency: string;
+  };
+  stats: {
+    total_payouts: number;
+    total_ledger: number;
+    matched_count: number;
+    unmatched_count: number;
+    match_rate: number;
+    total_unmatched_amount: number;
+    currency: string;
+  };
+}
+
+export interface PaginatedMatchesResponse {
+  matches: (MatchRecord & {
+    payout: TransactionRecord;
+    ledger: TransactionRecord;
+  })[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
 }
 
 // ============ MATCH RESULT TYPES (for matching engine) ============
@@ -377,4 +420,76 @@ export interface MatchResult {
   score_breakdown: ScoreBreakdown;
   match_type: string;
   confidence_level: string;
+}
+
+// ============ COMPATIBILITY TYPES ============
+
+// These types are for compatibility with existing code that might expect them
+export interface Transaction {
+  id: string;
+  transaction_id: string;
+  amount_cents: number;
+  description: string;
+  date: string;
+  // Add other transaction properties
+}
+
+// Legacy Match type for compatibility
+export interface Match {
+  id: string;
+  job_id: string;
+  payout_id: string;
+  ledger_id: string;
+  match_score: number;
+  score?: number;
+  created_at: string;
+  matched_at?: string;
+  payout?: TransactionRecord;
+  ledger?: TransactionRecord;
+}
+
+// In your @/@types file (probably types/index.ts or similar)
+
+// Just update the PaginatedClustersResponse to use Cluster instead of ClusterRecord
+export interface PaginatedClustersResponse {
+  clusters: Cluster[];  // Use Cluster type (which already exists)
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+// Also make sure you have the ClusterRecord type defined:
+export interface ClusterRecord {
+  id: string;
+  job_id: string;
+  pivot_id: string;
+  pivot_type: 'payout' | 'ledger';
+  records: any[];  // Or a more specific TransactionRecord[] type
+  amount: number;  // Might be amount_cents
+  status: 'pending' | 'reviewed' | 'resolved' | 'ignored';
+  notes?: string;
+  created_at: string;
+  updated_at?: string;
+  pattern_type?: string;
+  llm_summary?: string;
+  suggested_action?: string;
+  llm_confidence?: number;
+  token_usage?: number;
+  evidence_ids?: string[];  // If you're storing evidence transaction IDs
+}
+
+// If you need to extend or create a separate InsertClusterRecord type:
+export interface InsertClusterRecord {
+  job_id: string;
+  pivot_id: string;
+  pivot_type: 'payout' | 'ledger';
+  records: any[];
+  amount: number;
+  status: string;
+  notes?: string;
+  created_at?: string;
+  pattern_type?: string;
+  evidence_ids?: string[];
 }

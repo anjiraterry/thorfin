@@ -135,6 +135,33 @@ export class SupabaseStorage implements IStorage {
     return data as TransactionRecord[]
   }
 
+  // NEW FUNCTION: Get total transaction count (not just unmatched)
+  async getTransactionCount(
+    jobId: string, 
+    source: "payout" | "ledger", 
+    searchQuery?: string
+  ): Promise<number> {
+    const supabase = await createClient()
+    let query = supabase
+      .from('transaction_records')
+      .select('id', { count: 'exact', head: true })
+      .eq('job_id', jobId)
+      .eq('source', source)
+    
+    if (searchQuery) {
+      query = query.or(`tx_id.ilike.%${searchQuery}%,reference.ilike.%${searchQuery}%`)
+    }
+    
+    const { count, error } = await query
+    
+    if (error) {
+      console.error('Error getting transaction count:', error)
+      return 0
+    }
+    
+    return count || 0
+  }
+
   async getUnmatchedTransactions(jobId: string, source: "payout" | "ledger", matchedIds: string[]): Promise<TransactionRecord[]> {
     const supabase = await createClient()
     let query = supabase

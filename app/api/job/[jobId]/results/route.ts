@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { storage } from '@/lib/storage/supabase-storage'
+import { getCorrectedTotalUnmatchedAmount } from '@/lib/matching-engine'
 import type { JobResultsResponse } from '@/@types'
 
 // Default and max limits for each type
@@ -55,11 +56,18 @@ export async function GET(
 
     // Get total counts first
     const totalMatches = await storage.getMatchesCount(jobId, searchQuery)
-    const totalUnmatchedPayouts = await storage.getUnmatchedTransactionsCount(jobId, "payout", [], searchQuery)
-    const totalUnmatchedLedger = await storage.getUnmatchedTransactionsCount(jobId, "ledger", [], searchQuery)
+    
+    // Get total transaction counts
+    const totalPayoutsCount = await storage.getTransactionCount(jobId, "payout", searchQuery)
+    const totalLedgerCount = await storage.getTransactionCount(jobId, "ledger", searchQuery)
+    
+    // Calculate actual unmatched counts
+    const unmatchedPayoutsCount = Math.max(0, totalPayoutsCount - totalMatches)
+    const unmatchedLedgerCount = Math.max(0, totalLedgerCount - totalMatches)
+    
     const totalClusters = await storage.getClustersCount(jobId)
 
-    // Get paginated matches - using the paginated method
+    // Get paginated matches
     const matches = await storage.getMatchesWithTransactionsPaginated(
       jobId, 
       matchesLimit, 
@@ -67,7 +75,7 @@ export async function GET(
       searchQuery
     )
 
-    // Get paginated clusters - using the paginated method
+    // Get paginated clusters
     const clusters = await storage.getClustersByJobPaginated(
       jobId, 
       clustersLimit, 
@@ -78,7 +86,7 @@ export async function GET(
     const matchedPayoutIds = matches.map(m => m.payout_id).filter(Boolean)
     const matchedLedgerIds = matches.map(m => m.ledger_id).filter(Boolean)
     
-    // Get paginated unmatched transactions - using the paginated method
+    // Get paginated unmatched transactions
     const unmatchedPayouts = await storage.getUnmatchedTransactionsPaginated(
       jobId, 
       "payout", 
@@ -97,15 +105,51 @@ export async function GET(
       searchQuery
     )
 
+    // *** FIX: Get ALL unmatched transactions and clusters for correct calculation ***
+    const allUnmatchedPayouts = await storage.getUnmatchedTransactionsPaginated(
+      jobId, 
+      "payout", 
+      matchedPayoutIds, 
+      10000, // Large limit to get all
+      0,
+      searchQuery
+    )
+    
+    const allUnmatchedLedger = await storage.getUnmatchedTransactionsPaginated(
+      jobId, 
+      "ledger", 
+      matchedLedgerIds, 
+      10000, // Large limit to get all
+      0,
+      searchQuery
+    )
+    
+    const allClusters = await storage.getClustersByJobPaginated(
+      jobId,
+      10000, // Large limit to get all
+      0
+    )
+    
+    // *** FIX: Use the corrected calculation ***
+    const totalUnmatchedAmount = getCorrectedTotalUnmatchedAmount(
+      allUnmatchedPayouts,
+      allUnmatchedLedger,
+      allClusters
+    )
+
     const response: JobResultsResponse = {
-      job,
+      job: {
+        ...job,
+        currency: job.currency || "NGN",
+      },
       stats: {
-        total_payouts: job.payout_row_count || 0,
-        total_ledger: job.ledger_row_count || 0,
+        total_payouts: totalPayoutsCount,
+        total_ledger: totalLedgerCount,
         matched_count: totalMatches,
-        unmatched_count: totalUnmatchedPayouts + totalUnmatchedLedger,
-        match_rate: job.match_rate || 0,
-        total_unmatched_amount: job.total_unmatched_amount_cents || 0,
+        unmatched_count: unmatchedPayoutsCount + unmatchedLedgerCount,
+        match_rate: totalPayoutsCount > 0 ? totalMatches / totalPayoutsCount : 0,
+        total_unmatched_amount: totalUnmatchedAmount, // *** CORRECTED ***
+        currency: job.currency || "NGN",
       },
       matches,
       unmatched_payouts: unmatchedPayouts,
@@ -116,21 +160,21 @@ export async function GET(
           page: matchesPage,
           limit: matchesLimit,
           total: totalMatches,
-          pages: Math.ceil(totalMatches / matchesLimit)
+          pages: Math.ceil(totalMatches / matchesLimit) || 1
         },
         transactions: {
           page: transactionsPage,
           limit: transactionsLimit,
-          total_payouts: totalUnmatchedPayouts,
-          total_ledger: totalUnmatchedLedger,
-          pages_payouts: Math.ceil(totalUnmatchedPayouts / transactionsLimit),
-          pages_ledger: Math.ceil(totalUnmatchedLedger / transactionsLimit)
+          total_payouts: unmatchedPayoutsCount,
+          total_ledger: unmatchedLedgerCount,
+          pages_payouts: Math.ceil(unmatchedPayoutsCount / transactionsLimit) || 1,
+          pages_ledger: Math.ceil(unmatchedLedgerCount / transactionsLimit) || 1
         },
         clusters: {
           page: clustersPage,
           limit: clustersLimit,
           total: totalClusters,
-          pages: Math.ceil(totalClusters / clustersLimit)
+          pages: Math.ceil(totalClusters / clustersLimit) || 1
         }
       }
     }

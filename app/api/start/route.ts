@@ -1,7 +1,7 @@
 // app/api/start/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { storage } from '@/lib/storage/supabase-storage'
-import { runMatchingEngine, buildClusters } from '@/lib/matching-engine'
+import { performReconciliation } from '@/lib/matching-engine' // Updated import
 import type { StartJobRequest, InsertTransactionRecord } from '@/@types'
 import { createClient } from '@/lib/supabase/server'
 
@@ -169,7 +169,7 @@ export async function GET(request: NextRequest) {
   )
 }
 
-// Background processing function
+// Background processing function - UPDATED to use performReconciliation
 async function processJobInBackground(
   jobId: string,
   payoutMapping: any,
@@ -259,7 +259,7 @@ async function processJobInBackground(
     debugLog(`PROCESS-${processId}`, 'Transactions stored successfully')
     await storage.updateJob(jobId, { progress: 30 })
 
-    // 4. Run matching engine (using stored transactions)
+    // 4. Run reconciliation using the NEW performReconciliation function
     debugLog(`PROCESS-${processId}`, 'Retrieving stored transactions...')
     const storedPayoutTxs = await storage.getTransactionsByJobAndSource(jobId, 'payout')
     const storedLedgerTxs = await storage.getTransactionsByJobAndSource(jobId, 'ledger')
@@ -269,8 +269,8 @@ async function processJobInBackground(
       storedLedgerCount: storedLedgerTxs.length
     })
     
-    debugLog(`PROCESS-${processId}`, 'Running matching engine with settings:', settings)
-    const matchResults = runMatchingEngine(
+    debugLog(`PROCESS-${processId}`, 'Running performReconciliation with settings:', settings)
+    const reconciliationResult = performReconciliation(
       storedPayoutTxs,
       storedLedgerTxs,
       {
@@ -282,16 +282,18 @@ async function processJobInBackground(
       }
     )
 
-    debugLog(`PROCESS-${processId}`, 'Matching engine completed:', {
-      matchCount: matchResults.length,
-      sampleMatch: matchResults[0]
+    debugLog(`PROCESS-${processId}`, 'Reconciliation completed:', {
+      matchesFound: reconciliationResult.matches.length,
+      clustersCreated: reconciliationResult.clusters.length,
+      correctedUnmatchedAmount: reconciliationResult.total_unmatched_amount_cents,
+      matchRate: reconciliationResult.match_rate
     })
 
     await storage.updateJob(jobId, { progress: 50 })
 
     // 5. Store match results
     debugLog(`PROCESS-${processId}`, 'Storing match results in database...')
-    const matchPromises = matchResults.map((match: any) => 
+    const matchPromises = reconciliationResult.matches.map((match: any) => 
       storage.createMatchRecord({
         job_id: jobId,
         payout_id: match.payout_id,
@@ -311,51 +313,21 @@ async function processJobInBackground(
     debugLog(`PROCESS-${processId}`, 'Match results stored')
     await storage.updateJob(jobId, { progress: 70 })
 
-    // 6. Create clusters for unmatched transactions
-    debugLog(`PROCESS-${processId}`, 'Identifying unmatched transactions...')
-    const matchedPayoutIds = matchResults.map((m: any) => m.payout_id)
-    const matchedLedgerIds = matchResults.map((m: any) => m.ledger_id)
-    
-    debugLog(`PROCESS-${processId}`, 'Matched IDs:', {
-      payoutIdsCount: matchedPayoutIds.length,
-      ledgerIdsCount: matchedLedgerIds.length
-    })
-    
-    const unmatchedPayouts = storedPayoutTxs.filter(tx => 
-      !matchedPayoutIds.includes(tx.id)
-    )
-    const unmatchedLedger = storedLedgerTxs.filter(tx => 
-      !matchedLedgerIds.includes(tx.id)
-    )
-    
-    const allUnmatched = [...unmatchedPayouts, ...unmatchedLedger]
-    
-    debugLog(`PROCESS-${processId}`, 'Unmatched transactions:', {
-      unmatchedPayouts: unmatchedPayouts.length,
-      unmatchedLedger: unmatchedLedger.length,
-      totalUnmatched: allUnmatched.length
-    })
-    
-    debugLog(`PROCESS-${processId}`, 'Building clusters...')
-    const clusters = buildClusters(allUnmatched)
-    
-    debugLog(`PROCESS-${processId}`, 'Clusters built:', {
-      clusterCount: clusters.length,
-      sampleCluster: clusters[0]
-    })
-
+    // 6. Store clusters (they contain all unmatched transactions)
     debugLog(`PROCESS-${processId}`, 'Storing clusters in database...')
-    const clusterPromises = clusters.map((cluster: any) =>
+    const clusterPromises = reconciliationResult.clusters.map((cluster: any) =>
       storage.createCluster({
-          job_id: jobId,
-          pivot_id: cluster.pivot_id,
-          pivot_type: cluster.pivot_type,
-          records: cluster.records,
-          amount: cluster.amount,
-          status: cluster.status,
-          notes: cluster.notes,
-          created_at: new Date().toISOString(),
-        
+        job_id: jobId,
+        pivot_id: cluster.pivot_id,
+        pivot_type: cluster.pivot_type,
+        records: cluster.records,
+        amount: cluster.amount,
+        status: cluster.status,
+        notes: cluster.notes,
+        merchant_name: cluster.merchant_name,
+        size: cluster.size,
+        created_at: new Date().toISOString(),
+
       })
     )
 
@@ -363,21 +335,16 @@ async function processJobInBackground(
     debugLog(`PROCESS-${processId}`, 'Clusters stored')
     await storage.updateJob(jobId, { progress: 90 })
 
-    // 7. Calculate final stats
-    debugLog(`PROCESS-${processId}`, 'Calculating final statistics...')
-    const totalUnmatchedAmount = allUnmatched.reduce(
+    // 7. Calculate the old unmatched amount (for comparison/debug)
+    const allUnmatched = [...reconciliationResult.unmatched_payouts, ...reconciliationResult.unmatched_ledger]
+    const oldUnmatchedAmount = allUnmatched.reduce(
       (sum: number, tx: any) => sum + tx.amount_cents, 0
     )
     
-    const matchRate = storedPayoutTxs.length > 0 
-      ? matchResults.length / storedPayoutTxs.length 
-      : 0
-
-    debugLog(`PROCESS-${processId}`, 'Statistics calculated:', {
-      totalUnmatchedAmount,
-      matchRate,
-      storedPayoutCount: storedPayoutTxs.length,
-      matchCount: matchResults.length
+    debugLog(`PROCESS-${processId}`, 'Unmatched amount comparison:', {
+      correctedAmount: reconciliationResult.total_unmatched_amount_cents,
+      oldAmount: oldUnmatchedAmount,
+      difference: reconciliationResult.total_unmatched_amount_cents - oldUnmatchedAmount
     })
 
     // 8. Clean up temp file data
@@ -389,15 +356,15 @@ async function processJobInBackground(
 
     debugLog(`PROCESS-${processId}`, 'Cleanup completed:', cleanupResult)
 
-    // 9. Update job completion
+    // 9. Update job completion with CORRECTED unmatched amount
     debugLog(`PROCESS-${processId}`, 'Updating job completion status...')
     await storage.updateJob(jobId, {
       status: 'completed',
       progress: 100,
-      match_rate: matchRate,
-      total_unmatched_amount_cents: totalUnmatchedAmount,
-      matched_count: matchResults.length,
-      unmatched_count: allUnmatched.length,
+      match_rate: reconciliationResult.match_rate,
+      total_unmatched_amount_cents: reconciliationResult.total_unmatched_amount_cents, // CORRECTED value
+      matched_count: reconciliationResult.matched_count,
+      unmatched_count: reconciliationResult.unmatched_count,
       completed_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
@@ -407,10 +374,13 @@ async function processJobInBackground(
       job_id: jobId,
       action: "processing_completed",
       details: {
-        matches_found: matchResults.length,
-        unmatched_count: allUnmatched.length,
-        match_rate: matchRate,
-        clusters_created: clusters.length,
+        matches_found: reconciliationResult.matched_count,
+        unmatched_count: reconciliationResult.unmatched_count,
+        match_rate: reconciliationResult.match_rate,
+        clusters_created: reconciliationResult.clusters.length,
+        corrected_unmatched_amount: reconciliationResult.total_unmatched_amount_cents,
+        old_unmatched_amount: oldUnmatchedAmount,
+        difference: reconciliationResult.total_unmatched_amount_cents - oldUnmatchedAmount
       },
     })
 

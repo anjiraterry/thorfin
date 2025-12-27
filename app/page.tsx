@@ -24,7 +24,7 @@ export default function LandingPage() {
     
 
       {/* Hero */}
-      <section className="mx-auto max-w-6xl px-6 pt-20 pb-16 text-center">
+      <section className="mx-auto max-w-6xl px-6 pt-16 pb-16 text-center">
         <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-200">
           <CheckCircle className="h-4 w-4" />
           Automate repetitive finance & compliance prep work
