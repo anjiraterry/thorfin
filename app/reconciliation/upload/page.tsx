@@ -15,7 +15,7 @@ import { Button } from "@/src/components/ui/button";
 import { Progress } from "@/src/components/ui/progress";
 import { useToast } from "@/src/hooks/use-toast";
 import { useAppStore } from "@/src/lib/store";
-import type { UploadResponse } from "@/@types";
+import type { UploadResponse } from "@/types/@types";
 
 interface FileDropZoneProps {
   label: string;
@@ -206,7 +206,7 @@ export default function UploadPage() {
   return (
     <div className="relative min-h-screen bg-white dark:bg-gray-900">
       {/* subtle gradient accents */}
-      <div className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full bg-gradient-to-br from-blue-500/10 to-indigo-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full bg-linear-to-br from-blue-500/10 to-indigo-500/10 blur-3xl" />
 
       <main className="mx-auto max-w-6xl px-6 py-12">
         <section className="mb-12 text-center">

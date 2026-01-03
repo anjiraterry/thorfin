@@ -1,5 +1,5 @@
 import { Document, Page, Text, View, StyleSheet, Font } from '@react-pdf/renderer'
-import type { Job, MatchRecord, Cluster, TransactionRecord } from "@/@types";
+import type { Job, MatchRecord, Cluster, TransactionRecord } from "@/types/@types";
 
 interface PdfData {
   job: Job;

@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Normalizer Test Data Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            opacity: 0.95;
+            font-size: 16px;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section h2 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section h2:before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #667eea;
+            border-radius: 2px;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input, select {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .checkbox-group input {
+            width: auto;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .progress {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            display: none;
+        }
+        
+        .progress.active {
+            display: block;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .progress-text {
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+        
+        .scenario-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .scenario-item {
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 13px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .scenario-item strong {
+            display: block;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .scenario-item span {
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 Payment Normalizer Test Data Generator</h1>
+            <p>Generate realistic invoice and payment test files with edge cases</p>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <h2>Configuration</h2>
+                <div class="controls">
+                    <div class="control-group">
+                        <label>Number of Scenarios</label>
+                        <input type="number" id="numScenarios" value="10" min="1" max="50">
+                    </div>
+                    <div class="control-group">
+                        <label>Invoices per Scenario</label>
+                        <input type="number" id="invoicesPerScenario" value="25" min="5" max="100">
+                    </div>
+                    <div class="control-group">
+                        <label>Base Currency</label>
+                        <select id="currency">
+                            <option value="NGN">NGN (Nigerian Naira)</option>
+                            <option value="USD">USD (US Dollar)</option>
+                            <option value="EUR">EUR (Euro)</option>
+                            <option value="GBP">GBP (British Pound)</option>
+                        </select>
+                    </div>
+                    <div class="control-group checkbox-group">
+                        <input type="checkbox" id="includePDFs" checked>
+                        <label>Include PDF Proofs</label>
+                    </div>
+                </div>
+                
+                <button id="generateBtn" onclick="generateAllScenarios()">
+                    🚀 Generate Test Data
+                </button>
+                
+                <div class="progress" id="progressBar">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">Generating...</div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>Test Scenarios Included</h2>
+                <div class="scenario-list">
+                    <div class="scenario-item">
+                        <strong>✅ Clean Match</strong>
+                        <span>Perfect invoice references, exact amounts</span>
+                    </div>
+                    <div class="scenario-item">
+                        <strong>💰 Withholding Tax</strong>
+                        <span>10% WHT deducted, needs explanation</span>
+                    </div>
+                    <div class="scenario-item">
+                        <strong>💳 Bank Fees</strong>
+                        <span>Transfer fees deducted (50-500 range)</span>
+                    </div>
+                    <div class="scenario-item">
+                        <strong>📊 Partial Payments</strong>
+                        <span>Paying 50-90% of invoice amount</span>
+                    </div>
+                    <div class="scenario-item">
+                        <strong>🔀 Split Payments</strong>
+                        <span>One payment covering multiple invoices</span>
+                    </div>
+                    <div class="scenario-item">
+                        <strong>🔄 Duplicate Payments</strong>
+                        <span>Same payment uploaded twice</span>
+                    </div>
+                    <div class="scenario-item">
+                        <strong>🎯 Fuzzy Matching</strong>
+                        <span>Slight name variations, typos</span>
+                    </div>
+                    <div class="scenario-item">
+                        <strong>⚠️ Overpayments</strong>
+                        <span>Amount exceeds invoice</span>
+                    </div>
+                    <div class="scenario-item">
+                        <strong>🏦 Multiple Banks</strong>
+                        <span>Different CSV formats</span>
+                    </div>
+                    <div class="scenario-item">
+                        <strong>⏰ Timing Issues</strong>
+                        <span>Early/late payments</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="stats" id="stats" style="display:none;">
+                <div class="stat-card">
+                    <div class="stat-value" id="statScenarios">0</div>
+                    <div class="stat-label">Scenarios</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statInvoices">0</div>
+                    <div class="stat-label">Invoices</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statPayments">0</div>
+                    <div class="stat-label">Payments</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statFiles">0</div>
+                    <div class="stat-label">Files</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const companies = [
+            'ABC Hospital', 'XYZ Clinic', 'MediCare Plus', 'HealthFirst Ltd',
+            'Prime Hospital', 'City Medical Center', 'Royal Clinic', 'General Hospital',
+            'Medicare Services', 'HealthTech Solutions', 'Wellness Center', 'Care Hospital',
+            'Metro Clinic', 'University Hospital', 'Community Health', 'Advanced Medical',
+            'Downtown Clinic', 'Sunrise Hospital', 'Phoenix Healthcare', 'Elite Medical'
+        ];
+
+        function randomCompany() {
+            return companies[Math.floor(Math.random() * companies.length)];
+        }
+
+        function randomAmount(min, max) {
+            return Math.floor(Math.random() * (max - min) + min);
+        }
+
+        function randomDate(start, end) {
+            const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+            return date.toISOString().split('T')[0];
+        }
+
+        function addDays(date, days) {
+            const result = new Date(date);
+            result.setDate(result.getDate() + days);
+            return result;
+        }
+
+        function downloadCSV(filename, content) {
+            const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        }
+
+        function generateInvoiceCSV(scenarioName, count, currency) {
+            let csv = 'Invoice ID,Customer Name,Amount Due,Invoice Date,Due Date,Currency,Description\n';
+            const invoices = [];
+            const startDate = new Date('2025-01-01');
+            
+            for (let i = 1; i <= count; i++) {
+                const company = randomCompany();
+                const amount = randomAmount(10000, 200000);
+                const invoiceDate = randomDate(startDate, addDays(startDate, 30));
+                const dueDate = randomDate(new Date(invoiceDate), addDays(new Date(invoiceDate), 30));
+                const invoiceId = `INV-${scenarioName}-${String(i).padStart(4, '0')}`;
+                
+                invoices.push({
+                    id: invoiceId,
+                    company,
+                    amount,
+                    invoiceDate,
+                    dueDate,
+                    currency
+                });
+                
+                csv += `${invoiceId},${company},${amount},${invoiceDate},${dueDate},${currency},Professional services\n`;
+            }
+            
+            return { csv, invoices };
+        }
+
+        function generatePaymentCSV(scenarioName, invoices, scenario, currency) {
+            const formats = {
+                'clean': 'Payer,Amount,Date,Reference,Account\n',
+                'bank1': 'Transaction ID,Merchant,Amount,Currency,Date,Narration,Account Number\n',
+                'bank2': 'PAYER NAME,AMOUNT,PAYMENT DATE,REFERENCE NUMBER,BANK ACCOUNT\n',
+                'messy': 'payer,amt,dt,ref,acct_no\n'
+            };
+            
+            const format = ['clean', 'bank1', 'bank2', 'messy'][Math.floor(Math.random() * 4)];
+            let csv = formats[format];
+            const payments = [];
+            
+            invoices.forEach((invoice, idx) => {
+                let amount = invoice.amount;
+                let reference = invoice.id;
+                let payer = invoice.company;
+                const paymentDate = randomDate(new Date(invoice.invoiceDate), addDays(new Date(invoice.dueDate), 10));
+                const account = `ACC-${Math.floor(Math.random() * 99999)}`;
+                
+                // Apply scenario logic
+                switch(scenario) {
+                    case 'wht':
+                        if (idx % 3 === 0) {
+                            amount = Math.floor(amount * 0.9); // 10% WHT
+                            reference += ' - WHT deducted';
+                        }
+                        break;
+                    case 'fees':
+                        if (idx % 4 === 0) {
+                            amount -= [50, 100, 150, 200][Math.floor(Math.random() * 4)];
+                            reference += ' - bank fee';
+                        }
+                        break;
+                    case 'partial':
+                        if (idx % 5 === 0) {
+                            amount = Math.floor(amount * (0.5 + Math.random() * 0.4)); // 50-90%
+                            reference += ' - partial payment';
+                        }
+                        break;
+                    case 'duplicate':
+                        if (idx === 5) {
+                            // Will create duplicate in another row
+                        }
+                        break;
+                    case 'fuzzy':
+                        if (idx % 3 === 0) {
+                            const variations = [
+                                payer.replace('Hospital', 'Hosp'),
+                                payer.replace('Ltd', 'Limited'),
+                                payer.toUpperCase(),
+                                payer.replace(' ', '')
+                            ];
+                            payer = variations[Math.floor(Math.random() * variations.length)];
+                        }
+                        break;
+                    case 'overpayment':
+                        if (idx % 6 === 0) {
+                            amount = Math.floor(amount * 1.1); // 10% overpayment
+                        }
+                        break;
+                }
+                
+                // Format based on CSV type
+                let row = '';
+                switch(format) {
+                    case 'clean':
+                        row = `${payer},${amount},${paymentDate},${reference},${account}\n`;
+                        break;
+                    case 'bank1':
+                        const txId = `TX${Math.floor(Math.random() * 999999)}`;
+                        row = `${txId},${payer},${amount},${currency},${paymentDate},${reference},${account}\n`;
+                        break;
+                    case 'bank2':
+                        row = `${payer.toUpperCase()},${amount},${paymentDate},${reference.toUpperCase()},${account}\n`;
+                        break;
+                    case 'messy':
+                        row = `${payer},${amount},${paymentDate},${reference},${account}\n`;
+                        break;
+                }
+                
+                csv += row;
+                payments.push({ payer, amount, date: paymentDate, reference });
+                
+                // Add duplicate
+                if (scenario === 'duplicate' && idx === 5) {
+                    csv += row;
+                }
+            });
+            
+            // Add split payment
+            if (scenario === 'split') {
+                const splitInvoices = invoices.slice(0, 3);
+                const totalAmount = splitInvoices.reduce((sum, inv) => sum + inv.amount, 0);
+                const splitRef = splitInvoices.map(inv => inv.id).join(', ');
+                const payer = splitInvoices[0].company;
+                const date = randomDate(new Date(), addDays(new Date(), 5));
+                const account = `ACC-${Math.floor(Math.random() * 99999)}`;
+                
+                switch(format) {
+                    case 'clean':
+                        csv += `${payer},${totalAmount},${date},Payment for ${splitRef},${account}\n`;
+                        break;
+                    case 'bank1':
+                        const txId = `TX${Math.floor(Math.random() * 999999)}`;
+                        csv += `${txId},${payer},${totalAmount},${currency},${date},Payment for ${splitRef},${account}\n`;
+                        break;
+                    case 'bank2':
+                        csv += `${payer.toUpperCase()},${totalAmount},${date},PAYMENT FOR ${splitRef},${account}\n`;
+                        break;
+                    case 'messy':
+                        csv += `${payer},${totalAmount},${date},${splitRef},${account}\n`;
+                        break;
+                }
+            }
+            
+            return { csv, payments };
+        }
+
+        function generatePDF(scenarioName, invoices, index) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            const invoice = invoices[index];
+            
+            // Title
+            doc.setFontSize(20);
+            doc.text('PAYMENT RECEIPT', 105, 20, { align: 'center' });
+            
+            // Receipt details
+            doc.setFontSize(12);
+            doc.text(`Receipt No: RCP-${scenarioName}-${String(index).padStart(4, '0')}`, 20, 40);
+            doc.text(`Date: ${invoice.invoiceDate}`, 20, 50);
+            doc.text(`Invoice Reference: ${invoice.id}`, 20, 60);
+            
+            // Payer info
+            doc.setFontSize(14);
+            doc.text('From:', 20, 80);
+            doc.setFontSize(11);
+            doc.text(invoice.company, 20, 88);
+            doc.text('Account: ACC-' + Math.floor(Math.random() * 99999), 20, 96);
+            
+            // Amount box
+            doc.setFillColor(240, 240, 255);
+            doc.rect(20, 110, 170, 30, 'F');
+            doc.setFontSize(14);
+            doc.text('Amount Paid:', 30, 125);
+            doc.setFontSize(18);
+            doc.text(`${invoice.currency} ${invoice.amount.toLocaleString()}`, 30, 135);
+            
+            // Notes
+            doc.setFontSize(10);
+            doc.text('Payment processed successfully', 20, 155);
+            doc.text('Bank: First Bank Nigeria', 20, 163);
+            doc.text('Transaction Status: Completed', 20, 171);
+            
+            // Footer
+            doc.setFontSize(8);
+            doc.text('This is a computer-generated receipt', 105, 280, { align: 'center' });
+            
+            return doc.output('blob');
+        }
+
+        async function generateScenario(scenarioNum, invoiceCount, currency, includePDFs) {
+            const scenarioName = String(scenarioNum).padStart(2, '0');
+            const scenarios = ['clean', 'wht', 'fees', 'partial', 'split', 'duplicate', 'fuzzy', 'overpayment'];
+            const scenario = scenarios[scenarioNum % scenarios.length];
+            
+            // Generate invoices
+            const { csv: invoiceCSV, invoices } = generateInvoiceCSV(scenarioName, invoiceCount, currency);
+            
+            // Generate payments
+            const { csv: paymentCSV, payments } = generatePaymentCSV(scenarioName, invoices, scenario, currency);
+            
+            // Download files
+            downloadCSV(`scenario_${scenarioName}_invoices.csv`, invoiceCSV);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            downloadCSV(`scenario_${scenarioName}_payments.csv`, paymentCSV);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            // Generate 3 PDF proofs
+            if (includePDFs && invoices.length >= 3) {
+                for (let i = 0; i < 3; i++) {
+                    const pdfBlob = generatePDF(scenarioName, invoices, i);
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(pdfBlob);
+                    link.download = `scenario_${scenarioName}_proof_${i + 1}.pdf`;
+                    link.click();
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+            }
+            
+            return { invoices: invoices.length, payments: payments.length, files: includePDFs ? 5 : 2 };
+        }
+
+        async function generateAllScenarios() {
+            const numScenarios = parseInt(document.getElementById('numScenarios').value);
+            const invoicesPerScenario = parseInt(document.getElementById('invoicesPerScenario').value);
+            const currency = document.getElementById('currency').value;
+            const includePDFs = document.getElementById('includePDFs').checked;
+            
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const generateBtn = document.getElementById('generateBtn');
+            
+            progressBar.classList.add('active');
+            generateBtn.disabled = true;
+            
+            let totalInvoices = 0;
+            let totalPayments = 0;
+            let totalFiles = 0;
+            
+            for (let i = 1; i <= numScenarios; i++) {
+                const result = await generateScenario(i, invoicesPerScenario, currency, includePDFs);
+                totalInvoices += result.invoices;
+                totalPayments += result.payments;
+                totalFiles += result.files;
+                
+                const progress = (i / numScenarios) * 100;
+                progressFill.style.width = progress + '%';
+                progressText.textContent = `Generated ${i}/${numScenarios} scenarios...`;
+                
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+            
+            // Show stats
+            document.getElementById('stats').style.display = 'grid';
+            document.getElementById('statScenarios').textContent = numScenarios;
+            document.getElementById('statInvoices').textContent = totalInvoices;
+            document.getElementById('statPayments').textContent = totalPayments;
+            document.getElementById('statFiles').textContent = totalFiles;
+            
+            progressText.textContent = '✅ All files generated successfully!';
+            setTimeout(() => {
+                progressBar.classList.remove('active');
+                generateBtn.disabled = false;
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

@@ -10,7 +10,7 @@ import type {
   InsertCluster,
   AuditLog,
   InsertAuditLog 
-} from '@/@types'
+} from '@/types/@types'
 import { createClient } from '../supabase/server'
 
 export class SupabaseStorage implements IStorage {

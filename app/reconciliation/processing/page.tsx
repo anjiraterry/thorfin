@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/ca
 import { Progress } from "@/src/components/ui/progress";
 import { useAppStore } from "@/src/lib/store";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import type { JobStatusResponse } from "@/@types";
+import type { JobStatusResponse } from "@/types/@types";
 
 const POLL_INTERVAL = 1000;
 
@@ -97,8 +97,8 @@ export default function ProcessingPage() {
   return (
     <div className="relative min-h-screen bg-white dark:bg-gray-900 overflow-x-hidden">
       {/* subtle gradient accents */}
-      <div className="pointer-events-none fixed -top-32 -left-32 h-96 w-96 rounded-full bg-gradient-to-br from-blue-500/10 to-indigo-500/10 blur-3xl" />
-      <div className="pointer-events-none fixed -bottom-32 -right-32 h-96 w-96 rounded-full bg-gradient-to-tl from-blue-500/10 to-purple-500/10 blur-3xl" />
+      <div className="pointer-events-none fixed -top-32 -left-32 h-96 w-96 rounded-full bg-linear-to-br from-blue-500/10 to-indigo-500/10 blur-3xl" />
+      <div className="pointer-events-none fixed -bottom-32 -right-32 h-96 w-96 rounded-full bg-linear-to-tl from-blue-500/10 to-purple-500/10 blur-3xl" />
 
       <main className="relative mx-auto max-w-6xl px-6 py-12 z-10">
         <section className="mb-12 text-center">

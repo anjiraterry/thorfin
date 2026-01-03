@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { storage } from '@/lib/storage/supabase-storage'
-import type { PaginatedMatchesResponse } from '@/@types'
+import type { PaginatedMatchesResponse } from '@/types/@types'
 
 const DEFAULT_MATCHES_LIMIT = 20
 const MAX_LIMIT = 100
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { jobId: string } }
+  { params }: { params: Promise<{ jobId: string }> }
 ) {
   try {
     const { jobId } = await params

@@ -39,8 +39,8 @@ import { useToast } from "@/src/hooks/use-toast";
 import { useAppStore } from "@/src/lib/store";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/src/lib/queryClient";
-import { ClusterView } from "@/src/components/cluster-view";
-import type { JobResultsResponse, TransactionRecord, MatchRecord, ScoreBreakdown } from "@/@types";
+import { ClusterView } from "@/src/components/reconciliation/cluster-view";
+import type { JobResultsResponse, TransactionRecord, MatchRecord, ScoreBreakdown } from "@/types/@types";
 
 function formatCents(cents: number, currency: string = "NGN"): string {
   
@@ -150,7 +150,7 @@ function KPICard({ label, value, subtext, icon }: KPICardProps) {
           </div>
           
           {icon && (
-            <div className="p-2 rounded-lg bg-slate-100 dark:bg-gray-700 flex-shrink-0">
+            <div className="p-2 rounded-lg bg-slate-100 dark:bg-gray-700 shrink-0">
               {icon}
             </div>
           )}
@@ -718,8 +718,8 @@ export default function ResultsPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 overflow-x-hidden">
       {/* subtle gradient accents */}
-      <div className="pointer-events-none fixed -top-32 -left-32 h-96 w-96 rounded-full bg-gradient-to-br from-blue-500/10 to-indigo-500/10 blur-3xl" />
-      <div className="pointer-events-none fixed -bottom-32 -right-32 h-96 w-96 rounded-full bg-gradient-to-tl from-blue-500/10 to-purple-500/10 blur-3xl" />
+      <div className="pointer-events-none fixed -top-32 -left-32 h-96 w-96 rounded-full bg-linear-to-br from-blue-500/10 to-indigo-500/10 blur-3xl" />
+      <div className="pointer-events-none fixed -bottom-32 -right-32 h-96 w-96 rounded-full bg-linear-to-tl from-blue-500/10 to-purple-500/10 blur-3xl" />
 
       <main className="relative mx-auto max-w-7xl px-6 py-8 z-10">
         <section className="mb-8">

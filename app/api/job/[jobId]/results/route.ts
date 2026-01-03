@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { storage } from '@/lib/storage/supabase-storage'
 import { getCorrectedTotalUnmatchedAmount } from '@/lib/matching-engine'
-import type { JobResultsResponse } from '@/@types'
+import type { JobResultsResponse } from '@/types/@types'
 
 // Default and max limits for each type
 const DEFAULT_MATCHES_LIMIT = 20
@@ -11,7 +11,7 @@ const MAX_LIMIT = 100
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { jobId: string } }
+  { params }: { params: Promise<{ jobId: string }> }
 ) {
   try {
     const { jobId } = await params

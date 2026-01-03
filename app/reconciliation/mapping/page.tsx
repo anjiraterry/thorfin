@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ArrowLeft, Sparkles, Info, Zap } from "lucide-react";
 
-import type { ColumnMapping } from "@/@types";
+import type { ColumnMapping } from "@/types/@types";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/src/components/ui/card";
@@ -271,8 +271,8 @@ export default function MappingPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 overflow-x-hidden">
       {/* subtle gradient accents */}
-      <div className="pointer-events-none fixed -top-32 -left-32 h-96 w-96 rounded-full bg-gradient-to-br from-blue-500/10 to-indigo-500/10 blur-3xl" />
-      <div className="pointer-events-none fixed -bottom-32 -right-32 h-96 w-96 rounded-full bg-gradient-to-tl from-blue-500/10 to-purple-500/10 blur-3xl" />
+      <div className="pointer-events-none fixed -top-32 -left-32 h-96 w-96 rounded-full bg-linear-to-br from-blue-500/10 to-indigo-500/10 blur-3xl" />
+      <div className="pointer-events-none fixed -bottom-32 -right-32 h-96 w-96 rounded-full bg-linear-to-tl from-blue-500/10 to-purple-500/10 blur-3xl" />
 
       <main className="relative mx-auto max-w-6xl px-6 py-12 z-10">
         <section className="mb-12 text-center">

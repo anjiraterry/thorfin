@@ -4,9 +4,10 @@ import { generateClusterSummary } from '@/lib/openai-service'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { clusterId: string } }
+  { params }: { params: Promise<{ clusterId: string }> }
 ) {
   try {
+    // Await the params promise
     const { clusterId } = await params
     
     const cluster = await storage.getClusterById(clusterId)

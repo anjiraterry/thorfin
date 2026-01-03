@@ -3,7 +3,7 @@ import { storage } from '@/lib/storage/supabase-storage'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { matchId: string } }
+  { params }: { params: Promise<{ matchId: string }> }
 ) {
   try {
     const { matchId } = await params

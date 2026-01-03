@@ -1,4 +1,4 @@
-import type { TransactionRecord, ScoreBreakdown, InsertMatchRecord, JobSettings, Cluster } from "@/@types";
+import type { TransactionRecord, ScoreBreakdown, InsertMatchRecord, JobSettings, Cluster } from "@/types/@types";
 
 const WEIGHTS = {
   exact: 40,

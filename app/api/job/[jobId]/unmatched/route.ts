@@ -6,7 +6,7 @@ const MAX_LIMIT = 100
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { jobId: string } }
+  { params }: { params: Promise<{ jobId: string }> }
 ) {
   try {
     const { jobId } = await params

@@ -6,7 +6,7 @@ import type {
   Cluster,
   ColumnMapping,
   JobSettings
-} from "@/@types";
+} from "@/types/@types";
 
 interface AppState {
   current_job_id: string | null;

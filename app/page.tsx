@@ -8,7 +8,8 @@ import {
   Upload,
   SlidersHorizontal,
   Cpu,
-  Download
+  Download,
+  CreditCard
 } from "lucide-react";
 import { ThemeToggle } from "@/src/components/theme-toggle";
 
@@ -18,9 +19,9 @@ export default function LandingPage() {
 
       {/* subtle decorative gradient orbs */}
       <div className="pointer-events-none absolute -top-32 -left-32 h-96 w-96 rounded-full bg-linear-to-br from-blue-500/10 to-indigo-500/10 blur-3xl" />
-      <div className="pointer-events-none absolute top-[40%] -right-40 h-[28rem] w-[28rem] rounded-full bg-linear-to-br from-indigo-500/10 to-blue-500/10 blur-3xl" />
+      <div className="pointer-events-none absolute top-[40%] -right-40 h-112 w-md rounded-full bg-linear-to-br from-indigo-500/10 to-blue-500/10 blur-3xl" />
 
-      {/* Header */}
+     
     
 
       {/* Hero */}
@@ -87,46 +88,48 @@ export default function LandingPage() {
           </div>
 
           {/* Compliance */}
-          <div className="group relative rounded-2xl border-2 border-slate-200 bg-white transition-all hover:border-indigo-400 hover:shadow-lg hover:shadow-indigo-500/5 dark:border-gray-800 dark:bg-slate-800/60 dark:hover:border-indigo-400">
-            <div className="p-8">
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 dark:bg-indigo-900/30">
-                <Shield className="h-6 w-6 text-indigo-600 dark:text-indigo-300" />
-              </div>
+         {/* Payment Normalization */}
+<div className="group relative rounded-2xl border-2 border-slate-200 bg-white transition-all hover:border-indigo-400 hover:shadow-lg hover:shadow-indigo-500/5 dark:border-gray-800 dark:bg-slate-800/60 dark:hover:border-indigo-400">
+  <div className="p-8">
+    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 dark:bg-indigo-900/30">
+      <CreditCard className="h-6 w-6 text-indigo-600 dark:text-indigo-300" />
+    </div>
 
-              <h2 className="mb-2 text-2xl font-semibold text-slate-900 dark:text-white">
-                Compliance Prep Assistant
-              </h2>
+    <h2 className="mb-2 text-2xl font-semibold text-slate-900 dark:text-white">
+      Payment Normalizer
+    </h2>
 
-              <p className="mb-6 text-slate-600 dark:text-slate-400">
-                Pre-process KYC documents, flag gaps, and generate
-                reviewer-ready packets.
-              </p>
+    <p className="mb-6 text-slate-600 dark:text-slate-400">
+      Ingest messy payment proofs, normalize them into clean payment records,
+     
+    </p>
 
-              <div className="mb-6 space-y-3">
-                <Feature text="Bulk document ingestion" />
-                <Feature text="OCR + field extraction" />
-                <Feature text="Quality & completeness checks" />
-                <Feature text="Audit-friendly outputs" />
-              </div>
+    <div className="mb-6 space-y-3">
+      <Feature text="Canonical PaymentEvent generation" />
+      <Feature text="Duplicate & partial payment detection" />
+      <Feature text="Manual allocation & overrides" />
+      <Feature text="Reconciliation-ready exports" />
+    </div>
 
-              <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-gray-700 dark:bg-gray-900">
-                <div className="text-xs uppercase tracking-wide text-slate-500">
-                  Time saved
-                </div>
-                <div className="text-2xl font-semibold text-slate-900 dark:text-white">
-                  6–12 hrs/week
-                </div>
-              </div>
+    <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-gray-700 dark:bg-gray-900">
+      <div className="text-xs uppercase tracking-wide text-slate-500">
+        Time saved
+      </div>
+      <div className="text-2xl font-semibold text-slate-900 dark:text-white">
+        6–15 hrs/week
+      </div>
+    </div>
 
-              <button
-                onClick={() => (window.location.href = "/compliance/upload")}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-500 px-6 py-3 font-medium text-white transition hover:from-indigo-600 hover:to-blue-600"
-              >
-                Start Compliance Review
-                <ArrowRight className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
+    <button
+      onClick={() => (window.location.href = "/payment-normalizer")}
+      className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-500 px-6 py-3 font-medium text-white transition hover:from-indigo-600 hover:to-blue-600"
+    >
+      Start Payment Normalization
+      <ArrowRight className="h-5 w-5" />
+    </button>
+  </div>
+</div>
+
         </div>
       </section>
 

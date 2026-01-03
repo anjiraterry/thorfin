@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import type { TransactionRecord, Cluster } from "@/@types";
+import type { TransactionRecord, Cluster } from "@/types/@types";
 
 // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
 // Lazy initialization to avoid startup errors when API key is not set

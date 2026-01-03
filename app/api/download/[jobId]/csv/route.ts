@@ -3,9 +3,10 @@ import { storage } from '@/lib/storage/supabase-storage'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { jobId: string } }
+  { params }: { params: Promise<{ jobId: string }> }
 ) {
   try {
+    // Await the params promise
     const { jobId } = await params
     
     const job = await storage.getJob(jobId)

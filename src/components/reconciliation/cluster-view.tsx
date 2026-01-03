@@ -21,7 +21,7 @@ import { queryClient, apiRequest } from "@/src/lib/queryClient";
 import { useToast } from "@/src/hooks/use-toast";
 import { Separator } from "@/src/components/ui/separator";
 import { ScrollArea } from "@/src/components/ui/scroll-area";
-import type { Cluster } from "@/@types";
+import type { Cluster } from "@/types/@types";
 
 interface ClusterViewProps {
   clusters: Cluster[];
@@ -262,9 +262,9 @@ function ClusterCard({ cluster, jobId }: { cluster: Cluster; jobId: string }) {
                 </div>
                 <div className="bg-slate-50 dark:bg-gray-800/50 rounded-xl p-3 border border-slate-200 dark:border-gray-700">
                   <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Pattern Type</p>
-                  <Badge variant="outline" className="text-xs bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-slate-300">
+                  {/* <Badge variant="outline" className="text-xs bg-slate-100 dark:bg-gray-700 text-slate-700 dark:text-slate-300">
                     {cluster.pattern_type || "Exception"}
-                  </Badge>
+                  </Badge> */}
                 </div>
               </div>
             </div>

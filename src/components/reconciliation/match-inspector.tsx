@@ -5,7 +5,7 @@ import { Badge } from "@/src/components/ui/badge";
 import { Separator } from "@/src/components/ui/separator";
 import { ScrollArea } from "@/src/components/ui/scroll-area";
 import { Progress } from "@/src/components/ui/progress";
-import type { MatchRecord, TransactionRecord, ScoreBreakdown } from "@/@types";
+import type { MatchRecord, TransactionRecord, ScoreBreakdown } from "@/types/@types";
 
 interface MatchInspectorProps {
   match?: (MatchRecord & { payout: TransactionRecord; ledger: TransactionRecord }) | null;

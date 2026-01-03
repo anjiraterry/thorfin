@@ -1,6 +1,6 @@
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
-import type { InsertTransactionRecord, ColumnMapping } from "@/@types";
+import type { InsertTransactionRecord, ColumnMapping } from "@/types/@types";
 
 export interface ParsedFile {
   columns: string[];

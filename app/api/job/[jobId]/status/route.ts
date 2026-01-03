@@ -1,11 +1,11 @@
 // app/api/job/[jobId]/status/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { storage } from '@/lib/storage/supabase-storage'
-import type { JobStatusResponse } from '@/@types'
+import type { JobStatusResponse } from '@/types/@types'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { jobId: string } }
+  { params }: { params:Promise<{ jobId: string }>}
 ) {
   try {
     const { jobId } = await params

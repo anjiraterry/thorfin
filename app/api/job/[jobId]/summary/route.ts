@@ -3,11 +3,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { storage } from '@/lib/storage/supabase-storage'
 import { getCorrectedTotalUnmatchedAmount } from '@/lib/matching-engine'
-import type { JobSummaryResponse } from '@/@types'
+import type { JobSummaryResponse } from '@/types/@types'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { jobId: string } }
+  { params }: { params: Promise<{ jobId: string }>}
 ) {
   try {
     const { jobId } = await params

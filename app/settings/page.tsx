@@ -9,7 +9,7 @@ import { Input } from "@/src/components/ui/input";
 import { Slider } from "@/src/components/ui/slider";
 import { useToast } from "@/src/hooks/use-toast";
 import { useAppStore } from "@/src/lib/store";
-import { defaultSettings } from "@/@types";
+import { defaultSettings } from "@/types/@types";
 
 export default function SettingsPage() {
   const router = useRouter();
